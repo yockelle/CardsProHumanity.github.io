@@ -1,0 +1,30 @@
+{
+  "name": "cardsagainsthumanity",
+  "version": "1.0.0",
+  "description": "cards against humanity",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yockelle/CardsAgainstHumanity.git"
+  },
+  "keywords": [
+    "sockets",
+    "cards",
+    "against",
+    "humanity",
+    "node"
+  ],
+  "author": "odoland and others",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yockelle/CardsAgainstHumanity/issues"
+  },
+  "homepage": "https://github.com/yockelle/CardsAgainstHumanity#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^2.1.1"
+  }
+}
