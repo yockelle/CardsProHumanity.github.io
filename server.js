@@ -22,22 +22,22 @@
  
 */
 
-
-// Importing the module 'express', store that into a function call variable
+// Express server
 var express = require('express');  
 var app = express();
-var server = app.listen(3000); // node server.js  ,  localhost:3000
+app.set("port", (process.env.PORT || 3000));
+app.use(express.static('public')); // Statically serve pages from the 'public' directory
 
-// Send the html, js files in public to the app
-app.use(express.static('public')); 
+var http = require("http").Server(app);
+http.listen(app.get("port") , function() {
+	console.log("Server started on port %s", app.get("port"));
+});
 
-
-
-// Importing the module 'socket.io'
-/* This part is just the socket.io for the SERVER */
-
+// Socket io 
 var socket = require('socket.io');
-var io = socket(server);
+var io = socket(http); 
+
+
 
 /* Socket connection from Server to Client */
 io.sockets.on('connection', newConnection);
@@ -49,19 +49,23 @@ function newConnection(socket) {
 	
 	
 	// Receiving the mouse movement data from client
-	// second argument is the function that does something with the data
 	socket.on('mouseMove', mouse_Data);
 
 	function mouse_Data(data) {
 		console.log(data.x +  "," + data.y + "from" + socket.id);
-
-		//We also must broadcast the data to all the other clients
 		socket.broadcast.emit('mouseMove', data);
 
-		// The one below also emits to the client itself
-		// io.sockets.emit('mouseData', data);
+		// io.sockets.emit('mouseData', data); // emits to client itself
 
 	}
+
+	// Receiving click
+
+	socket.on('clickedCard', function(data) {
+		console.log(socket.id + " has clicked at " + data.x + "," + data.y);
+	})
+
+
 
 
 

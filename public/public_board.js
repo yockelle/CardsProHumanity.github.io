@@ -58,8 +58,8 @@ function mouseDragged() {
 		y: mouseY
 	}
 	
-	console.log('Sending mouseDragged: ' + mouseData);
-	// named 'mouseData' 
+	console.log('Sending mouseDragged: ' + mouseData.x + mouseData.y);
+	
 	
 	noStroke();
 	fill(255);
