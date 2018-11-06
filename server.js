@@ -25,7 +25,7 @@
 // Express server
 var express = require('express');  
 var app = express();
-app.set("port", (process.env.PORT || 3000));
+app.set("port", 8000);
 app.use(express.static('public')); // Statically serve pages from the 'public' directory
 
 var http = require("http").Server(app);

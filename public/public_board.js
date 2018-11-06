@@ -19,7 +19,8 @@ function setup() {
 	background(51);
 
 	// Connect the client to the server
-	socket = io.connect('http://localhost:3000')
+
+	socket = io.connect();
 
 	// The board must also receive data from the server
 	socket.on('mouseMove', newDrawing);
