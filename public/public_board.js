@@ -9,7 +9,11 @@ I marked all the functions that are just p5 library function with @p5
 
 */
 
+//var socket = io(); 
+//socket.on('mouseMove', newDrawing);
+
 var socket;
+
 
 //@p5
 function setup() {
@@ -19,8 +23,7 @@ function setup() {
 	background(51);
 
 	// Connect the client to the server
-
-	socket = io.connect();
+	socket = io();
 
 	// The board must also receive data from the server
 	socket.on('mouseMove', newDrawing);
@@ -37,19 +40,6 @@ function newDrawing(data) {
 
 
 //@p5
-function draw() {
-	
-	// Draws a little ellipse when moving mouse
-	/*
-	noStroke();
-	fill(255,100,255); // this is like purple (R,G,B) values
-	ellipse(mouseX, mouseY, 50, 50);
-	*/
-}
-
-
-
-//@p5
 function mouseDragged() {
 
 	// Function for clicking and dragging
@@ -59,7 +49,7 @@ function mouseDragged() {
 		y: mouseY
 	}
 	
-	console.log('Sending mouseDragged: ' + mouseData.x + mouseData.y);
+	console.log('Sending mouseDragged: ' + mouseData.x + ',' +  mouseData.y);
 	
 	
 	noStroke();
@@ -69,7 +59,3 @@ function mouseDragged() {
 	socket.emit('mouseMove',  mouseData);
 
 }
-
-
-
-

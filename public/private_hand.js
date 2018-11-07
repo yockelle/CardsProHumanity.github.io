@@ -7,7 +7,7 @@
 // has 7 cards, and transmits the card played to the server 
 // which will relay it to the public_board
 
-var socket;
+
 
 //@p5
 function setupHand() {
