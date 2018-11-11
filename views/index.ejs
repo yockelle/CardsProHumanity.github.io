@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Cards against Humanity</title>
+    
+
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
+
+    <!-- The below script are for handling the client side's socket.io -->
+    <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="public/public_board.js"></script>
+
+   
+
+    <h1> Dynamic page: Cards Against Humanity. Hello <%= username %> </h1>
+  
+  
+    <div id="CardDisplayField">
+    </div>
+
+
+    <h2> Pick a card to play: </h2>
+    
+    <div id= "Your Hand">
+      <button onclick="sendCard('<%= userhand[0] %>');">  <%= userhand[0] %> </button>
+      <button onclick="sendCard('<%= userhand[1] %>');">  <%= userhand[1] %> </button>
+      
+    </div>
+
+  </head>
+  <body>
+
+      <canvas id="myCanvas" width="200" height="100"></canvas>
+
+
+  </body>
+</html>
