@@ -57,7 +57,6 @@ function sendCard(cardid) {
 	}
 	
 	console.log('Sending the card ' + data.cardid + ' to Server');
-	
 	produceCard(cardid);
 	socket.emit('cardPlayed', data);
 

@@ -57,9 +57,9 @@ function newConnection(socket) {
 	socket.on('cardPlayed', function broadcastCard(data) {
 		// This function broadcasts the card to everyone 
 
-		console.log('broadcasting card to everyone else. recived from: ' + data.username);
-		socket.emit('cardPlayed', data);
-		// Note: socket.broadcast.emit('cardPlayed', data) can also be used to broadcast to all except self
+		console.log('Received' + data.cardid + ' from: ' + data.username);
+		socket.broadcast.emit('cardPlayed', data);
+		// Note: socket.broadcast.emit('cardPlayed', data) 
 	})
 
 }
