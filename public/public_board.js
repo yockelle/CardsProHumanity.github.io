@@ -13,7 +13,7 @@ function produceCard(cardID) {
     mainDiv.className = 'card';
 
     let image = document.createElement("IMG");
-    image.setAttribute("src","/public/CAH_logo.png");
+    image.setAttribute("src", "https://cardsagainsthumanity.com/images/BlackCard.png");
     image.setAttribute("width", "35%");
     image.setAttribute("alt", "Avatar");
 
