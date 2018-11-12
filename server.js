@@ -2,28 +2,47 @@
 var PORT = process.env.PORT || 8000 ;
 
 // Dependencies 
-var express = require("express");
+const express = require("express");
 var http = require("http");
 var socketIO = require('socket.io');
 
 // Initialize 
-var app = express();
+const app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
 app.set("port", PORT); // 8000 as default
+
+/* ---------------- Static  Page ----------------- We won't be using this anymore
+// Looks in /public/index.html for static serving
 app.use('/public', express.static(__dirname + "/public"));
-
-// Routing
-
-/*  Don't need this if we are serving staticly, see below
-app.get('/', function(request, response) {
-	response.render('index.html');
-});
+app.use(express.static("public"));
 */
 
-// since we serve static pages, we won't need to handle requests
-app.use(express.static("public"));
+/* ----------------- Dynamic Pages  ------------------ */
+// EJS for 'templating' - dynamic web server . Looks in /views/index.ejs
+app.set('view engine', 'ejs');
+app.use('/public', express.static(__dirname + "/public")); // this lets us know that all our public files are in that directory
+
+
+
+// Routing
+app.get(['/','index.html'], function(request, response) {
+													// The argument below will be replaced with JSON from the database
+	response.render(__dirname + '/views/index.ejs', { username : 'Joe_Schmoe', userhand: ['[cardid:0]','[cardid:1]','[cardid:2]','[cardid:3]'] });
+});
+
+
+/* --- TODO: css and js  stuff (FRONTEND stuff)  ----------
+app.get('/css/main.css', function(request, response) {
+	response.sendFile( (__dirname + '/public/css/main.css'));
+}); 
+
+app.get('/js/main.js', function(request, response) {
+	response.sendFile( (__dirname + '/public/js/main.js'));
+});
+*/ 
+
 
 // connection coming from client
 io.on('connection', newConnection); // io.socket.on('connection') also works for some reason
@@ -32,20 +51,25 @@ function newConnection(socket) {
 
 	console.log('Connection from: ' + socket.id)
 
-	// Receiving data from client
-	socket.on('mouseMove', mouse_Data);
 
-	function mouse_Data(data) {
-		console.log(data.x +  "," + data.y + "from" + socket.id);
-		socket.broadcast.emit('mouseMove', data);
-	}
+	// Receiving mouse click from client 
+
+	socket.on('cardPlayed', function broadcastCard(data) {
+		// This function broadcasts the card to everyone 
+
+		console.log('Received' + data.cardid + ' from: ' + data.username);
+		socket.broadcast.emit('cardPlayed', data);
+		// Note: socket.broadcast.emit('cardPlayed', data) 
+	})
 
 }
 
-console.log(app.get("port"))
 
+
+
+// Start Server Listening
 
 server.listen(app.get("port"), function() {
-	console.log("Node app started on port %s", app.get("port"));
+	console.log("Server started on port %s", app.get("port"));
 });
 
