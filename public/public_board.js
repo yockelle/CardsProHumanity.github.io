@@ -1,61 +1,65 @@
 /*
-// Client side's public board
-
-See this for all the mouse actions we can override
-https://github.com/processing/p5.js/wiki/p5.js-overview#mouse-and-touch-interaction
--Orlando
-
-I marked all the functions that are just p5 library function with @p5
+// Client side JS file
 
 */
 
-//var socket = io(); 
-//socket.on('mouseMove', newDrawing);
+// initialize socket connection
+var socket = io();
 
-var socket;
+function produceCard(cardID) {
+	// This function is adopted from Aaron - it just makes a div and makes the card
 
+	let mainDiv = document.createElement('div');
+    mainDiv.className = 'card';
 
-//@p5
-function setup() {
+    let image = document.createElement("IMG");
+    image.setAttribute("src", "https://cardsagainsthumanity.com/images/BlackCard.png");
+    image.setAttribute("width", "35%");
+    image.setAttribute("alt", "Avatar");
 
-	// TODO: I think this should scale with the browser
-	createCanvas(800, 800); 
-	background(51);
+    let insideDiv = document.createElement('div');
+    insideDiv.className = 'container';
+    let h4 = document.createElement('H4')
+    let boldText = document.createElement('strong').appendChild(document.createTextNode(cardID));
+    h4.appendChild(boldText);
+    
+    insideDiv.appendChild(h4);
+    insideDiv.appendChild(document.createElement("P")).appendChild(document.createTextNode("Player Card"));
+    
+    mainDiv.appendChild(image);
+    mainDiv.appendChild(insideDiv);
 
-	// Connect the client to the server
-	socket = io();
-
-	// The board must also receive data from the server
-	socket.on('mouseMove', newDrawing);
+    document.getElementById("CardDisplayField").appendChild(mainDiv);
 }
 
-function newDrawing(data) {
-	//function to update their instance of public board
-	// based on data
-	fill(200,200, 10); // using a different RGB to know its coming from
-	// the outside
 
-	ellipse(data.x, data.y, 50, 50);
-}
+// Listening from Server (receiving)
+socket.on('cardPlayed', function cardPlayed(data) {
 
+	// This function receives a card being played from the server, and updates the HTML.
+	// Receives data:
+	// Which is a JSON objct with username (socketid), and the cardid played 
 
-//@p5
-function mouseDragged() {
-
-	// Function for clicking and dragging
+	console.log("I have received a card being played from: " + data.username);
 	
-	var mouseData = {
-		x: mouseX,
-		y: mouseY
+	let cardid = data.cardid;
+	produceCard(cardid);
+	
+
+});
+function sendCard(cardid) {
+
+	// Function activated when a button is clicked. Sends the card being played to the server, and the socket.id of who sent it
+	
+	var data = {
+		cardid: cardid,
+		username: socket.id
 	}
 	
-	console.log('Sending mouseDragged: ' + mouseData.x + ',' +  mouseData.y);
-	
-	
-	noStroke();
-	fill(255);
-	ellipse (mouseX, mouseY, 50, 50);
-
-	socket.emit('mouseMove',  mouseData);
+	console.log('Sending the card ' + data.cardid + ' to Server');
+	produceCard(cardid);
+	socket.emit('cardPlayed', data);
 
 }
+
+
