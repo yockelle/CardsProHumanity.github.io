@@ -14,19 +14,47 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="public/public_board.js"></script>
+    <link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
 
    
 
     <h1> Dynamic page: Cards Against Humanity. Hello <%= username %> </h1>
-  
-  
+
+    
     <div id="CardDisplayField">
+
+          <div class="card">
+              <img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
+              <div class="container">
+                <h4><b><%= promptCard["cardid"]%> <%=promptCard["cardValue"]%></b></h4> 
+                <p>Prompt Cards</p> 
+              </div>
+            </div>
+      </div>
+
+      <br>
+   
+    <!-- for each card in userhand (passed in from server, loop through and display-->
+    <div id="CardDisplayField">
+
+      <% for(var i=0; i < userhand.length; i++) { %>
+        <div class="card">
+            <img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
+            <div class="container">
+              <h4><b>CardID: <%=userhand[i]["cardid"]%> <%=userhand[i]["cardValue"]%></b></h4> 
+              <p>Player Cards</p> 
+            </div>
+          </div>
+       <% } %>
     </div>
 
 
     <h2> Pick a card to play: </h2>
     
     <div id= "Your Hand">
+
+
+
       <button onclick="sendCard('<%= userhand[0] %>');">  <%= userhand[0] %> </button>
       <button onclick="sendCard('<%= userhand[1] %>');">  <%= userhand[1] %> </button>
       

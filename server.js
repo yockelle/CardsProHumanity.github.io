@@ -29,7 +29,9 @@ app.use('/public', express.static(__dirname + "/public")); // this lets us know 
 // Routing
 app.get(['/','index.html'], function(request, response) {
 													// The argument below will be replaced with JSON from the database
-	response.render(__dirname + '/views/index.ejs', { username : 'Joe_Schmoe', userhand: ['[cardid:0]','[cardid:1]','[cardid:2]','[cardid:3]'] });
+	response.render(__dirname + '/views/index.ejs', { username : AllPlayers.DEDFAEX.username, 
+													  userhand: AllPlayers.DEDFAEX.gameSession[1].userhand,
+													  promptCard: AllPlayers.DEDFAEX.gameSession[1].promptCard});
 });
 
 
@@ -43,6 +45,58 @@ app.get('/js/main.js', function(request, response) {
 });
 */ 
 
+/* Setting up variables (Idealy this should be in MongoDB)*/
+//this stores all the promptCards
+let promptCards = { 0: {cardid: 0,
+						cardValue: 'Daddy why is mommy crying?'}, 
+					1: {cardid: 1,
+						cardValue: 'What does Dick Cheney prefer?'},
+					2: {cardid: 2,
+						cardValue: 'I drink to forget __'},
+					};
+
+
+/* Setting up variables (Idealy this should be in MongoDB)*/
+//this stores all the playerCards
+let Cards = { 0: {cardid: 0,
+					cardValue: 'Drinking alone'}, 
+			  1: {cardid: 1,
+					cardValue: 'The glass ceiling,'},
+			  2: {cardid: 2,
+					cardValue: 'Sample2'},
+			 };
+
+/* Setting up variables (Idealy this should be in MongoDB)*/
+//this stores all the player/game info
+let AllPlayers = {DEDFAEX : {
+					username: 'Joe_Schmoe',
+					password: "abc",
+					unquieID: "DEDFAEX",
+					gameSession: {
+						1 : {
+							numberOfCards : 3,
+							userhand: [Cards[0] , Cards[1] , Cards[2]],
+							promptCard: promptCards[0],
+						}
+					},
+				},
+
+				EFADFEDA : {
+					username: 'Sam_Smith',
+					password: "abc",
+					unquieID: "EFADFEDA",
+					gameSession: {
+						1 : {
+							numberOfCards : 2,
+							userhand: [Cards[0] , Cards[2]],
+							promptCard: promptCards[0],
+						}
+					},
+				}
+
+				}
+
+
 
 // connection coming from client
 io.on('connection', newConnection); // io.socket.on('connection') also works for some reason
@@ -51,9 +105,6 @@ function newConnection(socket) {
 
 	console.log('Connection from: ' + socket.id)
 
-
-	// Receiving mouse click from client 
-
 	socket.on('cardPlayed', function broadcastCard(data) {
 		// This function broadcasts the card to everyone 
 
@@ -61,6 +112,8 @@ function newConnection(socket) {
 		socket.broadcast.emit('cardPlayed', data);
 		// Note: socket.broadcast.emit('cardPlayed', data) 
 	})
+
+
 
 }
 
