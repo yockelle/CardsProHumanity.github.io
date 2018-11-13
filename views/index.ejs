@@ -1,70 +1,50 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Cards against Humanity</title>
-    
+	<head>
+		<meta charset="UTF-8">
+		<title>Cards against Humanity</title>
 
-    
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
 
-    <!-- The below script are for handling the client side's socket.io -->
-    <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-    
+		<!-- The below script are for handling the client side's socket.io -->
+		<script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="public/public_board.js"></script>
-    <link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="public/public_board.js"></script>
+		<link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
+	</head>
 
-   
+	<body>
+		<h1> Dynamic page: Cards Against Humanity. Hello <%= username %> </h1>
+		<div id="CardDisplayField">
+			<div class="card">
+				<img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
+				<div class="container">
+					<h4><b><%= promptCard["cardid"]%> <%=promptCard["cardValue"]%></b></h4> 
+					<p>Prompt Cards</p> 
+				</div>
+			</div>
+		</div>
 
-    <h1> Dynamic page: Cards Against Humanity. Hello <%= username %> </h1>
+		<!-- for each card in userhand (passed in from server, loop through and display-->
+		<div id="CardDisplayField">
+			<% for(var i=0; i < userhand.length; i++) { %>
+				<div class="card">
+						<img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
+						<div class="container">
+							<h4><b>CardID: <%=userhand[i]["cardid"]%> <%=userhand[i]["cardValue"]%></b></h4> 
+							<p>Player Cards</p> 
+						</div>
+					</div>
+			 <% } %>
+		</div>
 
-    
-    <div id="CardDisplayField">
+		<h2> Pick a card to play: </h2>
+		<div id= "Your Hand">
+			<button onclick="sendCard('<%= userhand[0] %>');">  <%= userhand[0] %> </button>
+			<button onclick="sendCard('<%= userhand[1] %>');">  <%= userhand[1] %> </button>
+		</div>
+		<canvas id="myCanvas" width="200" height="100"></canvas>
+	</body>
 
-          <div class="card">
-              <img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
-              <div class="container">
-                <h4><b><%= promptCard["cardid"]%> <%=promptCard["cardValue"]%></b></h4> 
-                <p>Prompt Cards</p> 
-              </div>
-            </div>
-      </div>
-
-      <br>
-   
-    <!-- for each card in userhand (passed in from server, loop through and display-->
-    <div id="CardDisplayField">
-
-      <% for(var i=0; i < userhand.length; i++) { %>
-        <div class="card">
-            <img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
-            <div class="container">
-              <h4><b>CardID: <%=userhand[i]["cardid"]%> <%=userhand[i]["cardValue"]%></b></h4> 
-              <p>Player Cards</p> 
-            </div>
-          </div>
-       <% } %>
-    </div>
-
-
-    <h2> Pick a card to play: </h2>
-    
-    <div id= "Your Hand">
-
-
-
-      <button onclick="sendCard('<%= userhand[0] %>');">  <%= userhand[0] %> </button>
-      <button onclick="sendCard('<%= userhand[1] %>');">  <%= userhand[1] %> </button>
-      
-    </div>
-
-  </head>
-  <body>
-
-      <canvas id="myCanvas" width="200" height="100"></canvas>
-
-
-  </body>
 </html>
