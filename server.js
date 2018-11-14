@@ -120,6 +120,8 @@ function newConnection(socket) {
 
 	console.log('Connection from: ' + socket.id)
 
+
+	// Broadcast Card
 	socket.on('cardPlayed', function broadcastCard(data) {
 		// This function broadcasts the card to everyone 
 
@@ -128,14 +130,14 @@ function newConnection(socket) {
 		// Note: socket.broadcast.emit('cardPlayed', data) 
 	});
 
-	// Receive registering the user
+	// Regsiter 
 	socket.on("AskInput", function userData(user_data) {
 		console.log('Received username:' + user_data.username + ' Received password:' + user_data.password);
 
 		// Connection and error handling
-		mongoClient.connect(url, function(err, db) {
+		mongoClient.connect(url, {useNewUrlParser: true}, function(err, db) {
 			if (err) {
-				console.log("Error connecting to Mongo" + err);
+				console.log("Error connecting to Mongo: " + err);
 			} else {
 				console.log('Successfully connected to ' + url);
 			}
@@ -171,7 +173,10 @@ function newConnection(socket) {
 			}// end of insertNewUser func
 		});// end of mongoclient connection
 	}); //end of "AskInput"
-}; //end of new socket
+
+		
+
+}; //end of socket
 
 
 
