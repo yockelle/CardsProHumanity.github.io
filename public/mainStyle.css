@@ -1,3 +1,10 @@
+#LoginForm {
+    display: block;
+}
+
+#Game {
+    display: none;
+}
 
 .card{
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
@@ -6,7 +13,7 @@
     height: 20%;
     display:inline-block;
     word-wrap: normal;
-    
+
 }
 
 .card:hover {

@@ -1,73 +1,131 @@
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="UTF-8">
-		<title>Cards against Humanity</title>
 
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
+<head>
+	<meta charset="UTF-8">
+	<title>Cards against Humanity</title>
 
-		<!-- The below script are for handling the client side's socket.io -->
-		<script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
 
-		<script src="/socket.io/socket.io.js"></script>
-		<script src="public/public_board.js"></script>
-		<link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
-	</head>
+	<!-- The below script are for handling the client side's socket.io -->
 
-	<body>
-		<form>
-			Username: <input type="text" id="inputname"><br>
-			Password: <input type="password" id="inputpass"><br>
-			<input type="button" onclick="userInput()" value="Enter">
-		</form>
+	<script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 
-		<h1> Dynamic page: Cards Against Humanity. Hello <%= username %> </h1>
-		<div id="CardDisplayField">
-			<div class="card">
-				<img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
-				<div class="container">
-					<h4><b><%= promptCard["cardid"]%> <%=promptCard["cardValue"]%></b></h4> 
-					<p>Prompt Cards</p> 
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+	<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="public/public_board.js"></script>
+	<link rel="stylesheet" type="text/css" href="/public/loginPage.css">
+	<link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
+</head>
+
+<body>
+
+	<div id="LoginForm">
+		<div>
+			<h1 class="form-heading"></h1>
+			<div class="login-form">
+				<div class="main-div">
+					<div class="panel">
+						<h2>Login</h2>
+						<p>Please enter your username and password</p>
+					</div>
+					<form id="Login">
+
+						<div class="form-group">
+
+							<input type="text" class="form-control" id="inputname" placeholder="Username">
+
+						</div>
+
+						<div class="form-group">
+
+							<input type="password" class="form-control" id="inputpass" placeholder="Password">
+
+						</div>
+						<div class="forgot">
+							<a href="#">Forgot password?</a>
+						</div>
+						<div id="buttons">
+							<button type="submit" class="btn btn-primary" onclick="userInput()">Login</button></div>
+						<div id="buttons">
+							<button type="submit" class="btn btn-secondary" onclick="userRegister()">Register</button>
+						</div>
+					</form>
 				</div>
 			</div>
 		</div>
+	</div>
 
-		<!-- for each card in userhand (passed in from server, loop through and display-->
-		<div id="CardDisplayField">
-			<% for(var i=0; i < userhand.length; i++) { %>
-				<div class="card">
-						<img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
-						<div class="container">
-							<h4><b>CardID: <%=userhand[i]["cardid"]%> <%=userhand[i]["cardValue"]%></b></h4> 
-							<p>Player Cards</p> 
-						</div>
-					</div>
-			 <% } %>
+
+</body>
+
+<div id="Game">
+	<h1> Dynamic page: Cards Against Humanity. Hello
+		<%= username %>
+	</h1>
+	<div id="CardDisplayField">
+		<div class="card">
+			<img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
+			<div class="container">
+				<h4><b>
+						<%= promptCard["cardid"]%>
+						<%=promptCard["cardValue"]%></b></h4>
+				<p>Prompt Cards</p>
+			</div>
 		</div>
+	</div>
 
-		<h2> Pick a card to play: </h2>
-		<div id= "Your Hand">
-			<button onclick="sendCard('<%= userhand[0] %>');">  <%= userhand[0] %> </button>
-			<button onclick="sendCard('<%= userhand[1] %>');">  <%= userhand[1] %> </button>
+	<!-- for each card in userhand (passed in from server, loop through and display-->
+	<div id="CardDisplayField">
+		<% for(var i=0; i < userhand.length; i++) { %>
+		<div class="card">
+			<img src="/public/CAH_Logo.png" alt="Avatar" style="width:100%">
+			<div class="container">
+				<h4><b>CardID:
+						<%=userhand[i]["cardid"]%>
+						<%=userhand[i]["cardValue"]%></b></h4>
+				<p>Player Cards</p>
+			</div>
 		</div>
-		<canvas id="myCanvas" width="200" height="100"></canvas>
-	</body>
+		<% } %>
+	</div>
+
+	<h2> Pick a card to play: </h2>
+	<div id="Your Hand">
+		<button onclick="sendCard('<%= userhand[0] %>');">
+			<%= userhand[0] %> </button>
+		<button onclick="sendCard('<%= userhand[1] %>');">
+			<%= userhand[1] %> </button>
+	</div>
+	<canvas id="myCanvas" width="200" height="100"></canvas>
+
+</div>
+</body>
 
 
-	<script>
-		function userInput() {
-			console.log('Send user data to server');
-			var inputname = document.getElementById('inputname').value;
-			var inputpass = document.getElementById('inputpass').value;
-			var user_data = {
-				username: inputname,
-				password: inputpass
-			}
-			socket.emit("AskInput", user_data);
-			document.getElementById('inputname').value = '';
-			document.getElementById('inputpass').value = '';
+
+
+<script>
+	function userInput() {
+		console.log('Send user data to server');
+		var inputname = document.getElementById('inputname').value;
+		var inputpass = document.getElementById('inputpass').value;
+		var user_data = {
+			username: inputname,
+			password: inputpass
 		}
-	</script>
+		socket.emit("AskInput", user_data);
+		document.getElementById('inputname').value = '';
+		document.getElementById('inputpass').value = '';
+	}
+</script>
 
 
 </html>
