@@ -113,8 +113,9 @@ function newConnection(socket) {
 		// Note: socket.broadcast.emit('cardPlayed', data) 
 	})
 
-
-
+	socket.on("AskInput", function userData(user_data) {
+		console.log('Received username:' + user_data.username + ' Received password:' + user_data.password)
+	})
 }
 
 
