@@ -15,11 +15,19 @@
 //     cardValue: 'I drink to forget __'},
 // };
 
+// Imports
 const Card = require('./Card');
+const funcutils = require('./funcutils')
+const range = funcutils.range;
+
+
 
 module.exports = class Deck {
     constructor(type) {
         if (type === "Player") {
+
+
+            this.cards = 
             this.cards = [new Card(0,"Drinking Alone"),
                             new Card(1,"The glass ceiling,"),
                             new Card(2,"The floor"),
@@ -31,6 +39,8 @@ module.exports = class Deck {
                             new Card(8,"Sameeee"),
                             new Card(9,"Sameeeeeasfdasdf"),
                             new Card(10,"You are happy!"),
+
+
                         ];
         }
         else if (type === "Prompt") {
@@ -48,6 +58,8 @@ module.exports = class Deck {
         let card = this.cards.splice(randomIndex, 1)[0] //remove card and assign to var
         return card;
     }
+
+    addNewCard
 
 
 }

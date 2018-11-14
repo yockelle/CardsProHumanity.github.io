@@ -112,19 +112,27 @@
 
 
 
-<script>
-	function userInput() {
-		console.log('Send user data to server');
-		var inputname = document.getElementById('inputname').value;
-		var inputpass = document.getElementById('inputpass').value;
-		var user_data = {
-			username: inputname,
-			password: inputpass
+
+
+	<script>
+		function userInput() {
+			console.log('Send user data to server');
+			var inputname = document.getElementById('inputname').value;
+			var inputpass = document.getElementById('inputpass').value;
+			var user_data = {
+				username: inputname,
+				password: inputpass
+			}
+			socket.emit("AskInput", user_data);
+
+			
+			document.getElementById('inputname').value = '';
+			document.getElementById('inputpass').value = '';
 		}
 		socket.emit("AskInput", user_data);
 		document.getElementById('inputname').value = '';
 		document.getElementById('inputpass').value = '';
-	}
+	
 </script>
 
 
