@@ -15,6 +15,12 @@
 	</head>
 
 	<body>
+		<form>
+			Username: <input type="text" id="inputname"><br>
+			Password: <input type="password" id="inputpass"><br>
+			<input type="button" onclick="userInput()" value="Enter">
+		</form>
+
 		<h1> Dynamic page: Cards Against Humanity. Hello <%= username %> </h1>
 		<div id="CardDisplayField">
 			<div class="card">
@@ -46,5 +52,22 @@
 		</div>
 		<canvas id="myCanvas" width="200" height="100"></canvas>
 	</body>
+
+
+	<script>
+		function userInput() {
+			console.log('Send user data to server');
+			var inputname = document.getElementById('inputname').value;
+			var inputpass = document.getElementById('inputpass').value;
+			var user_data = {
+				username: inputname,
+				password: inputpass
+			}
+			socket.emit("AskInput", user_data);
+			document.getElementById('inputname').value = '';
+			document.getElementById('inputpass').value = '';
+		}
+	</script>
+
 
 </html>

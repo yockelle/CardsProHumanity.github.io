@@ -4,13 +4,13 @@
 
 Installing node_modules and dependencies using NPM:
 
-	> cd CardsAgainstHumanity.github.io
-	> npm install 
+	cd CardsAgainstHumanity.github.io
+	npm install 
 
 Run on Local Host:
 
-	> node server.js
+	node server.js
 
-Paste into Browser
+Paste into Browser:
 
-	> localhost:8000
+	localhost:8000
