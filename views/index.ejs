@@ -37,17 +37,11 @@
 						<p>Please enter your username and password</p>
 					</div>
 					<form id="Login">
-
 						<div class="form-group">
-
 							<input type="text" class="form-control" id="inputname" placeholder="Username">
-
 						</div>
-
 						<div class="form-group">
-
 							<input type="password" class="form-control" id="inputpass" placeholder="Password">
-
 						</div>
 						<div class="forgot">
 							<a href="#">Forgot password?</a>
@@ -115,6 +109,35 @@
 
 
 	<script>
+
+        //Bring in socket.io
+		var socket = io();
+		
+		
+
+		//When user presses the Register Button Click, Send Username/Pass to Server
+		function userRegister() {
+			console.log('Sending Registration Data to Server');
+			var inputname = document.getElementById('inputname').value;
+			var inputpass = document.getElementById('inputpass').value;
+
+			//Checks to make sure inputs are good
+			if (inputname != "" && inputpass != "") {
+				var user_data = {
+					username: inputname,
+					password: inputpass
+				}
+				socket.emit("Register", user_data);
+
+				document.getElementById('inputname').value = '';
+				document.getElementById('inputpass').value = '';
+			}	else {
+
+				alert("Username and/Or Password Cannot be blank!")
+			}
+		}
+
+
 		function userInput() {
 			console.log('Send user data to server');
 			var inputname = document.getElementById('inputname').value;
@@ -129,9 +152,11 @@
 			document.getElementById('inputname').value = '';
 			document.getElementById('inputpass').value = '';
 		}
-		socket.emit("AskInput", user_data);
-		document.getElementById('inputname').value = '';
-		document.getElementById('inputpass').value = '';
+		
+        //listen for stuff from server
+        socket.on('Registration_Status', function(data) {
+            alert(data);
+        });
 	
 </script>
 

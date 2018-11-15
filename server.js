@@ -56,10 +56,6 @@ const mongoClient = mongodb.MongoClient;
 const url = 'mongodb://teamemoji:emoji1234@ds163013.mlab.com:63013/cardsagainsthumanity';
 
 
-
-
-
-
 /* Setting up variables (Idealy this should be in MongoDB)*/
 //this stores all the promptCards
 let promptCards = { 0: {cardid: 0,
@@ -120,7 +116,6 @@ function newConnection(socket) {
 
 	console.log('Connection from: ' + socket.id)
 
-
 	// Broadcast Card
 	socket.on('cardPlayed', function broadcastCard(data) {
 		// This function broadcasts the card to everyone 
@@ -131,8 +126,10 @@ function newConnection(socket) {
 	});
 
 	// Regsiter 
-	socket.on("AskInput", function userData(user_data) {
+	socket.on("Register", function userData(user_data) {
 		console.log('Received username:' + user_data.username + ' Received password:' + user_data.password);
+
+		let result = "";
 
 		// Connection and error handling
 		mongoClient.connect(url, {useNewUrlParser: true}, function(err, db) {
@@ -150,12 +147,16 @@ function newConnection(socket) {
 			userCollection.find({username: user_data.username}).toArray((err,dbResult) => {
 				if (err) {
 					console.log('Database has some querying error');
+					result =  "Database Error. Please try again Later";
 				} else if (dbResult.length) { // if the result is not empty 
 					console.log('Username already exists in the database');
+					result = "Username already exists in the database";
+					
 				} else {
 					// Create a new user
 					console.log('No record found, this is a new user!');
 					insertNewUser();
+					result = "User created!";
 				}
 			});
 
@@ -165,13 +166,17 @@ function newConnection(socket) {
 				userCollection.insertOne(userdata, (err, dbResp) => {
 					if (err) {
 						console.log('Error inserting the new user ' + err);
+						result =  "Database Error. Please try again Later"
 					} else {
 						console.log(dbResp.insertedCount + ' doc inserted!');
+						result = "User created!";
 					}
 					db.close;
 				}) 
 			}// end of insertNewUser func
 		});// end of mongoclient connection
+
+		socket.emit('Registration_Status', result);
 	}); //end of "AskInput"
 
 		
