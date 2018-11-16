@@ -124,8 +124,8 @@ function newConnection(socket) {
 					console.log('Database has some querying error');
 					result =  "Database Error. Please try again Later";
 				} else if (dbResult.length) { // if the result is not empty 
-					console.log('Username already exists in the database');
 					result = "Username already exists in the database";
+					console.log('test:',result,'b');
 					
 				} else {
 					// Create a new user
