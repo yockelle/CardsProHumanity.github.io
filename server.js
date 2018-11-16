@@ -123,15 +123,17 @@ function newConnection(socket) {
 				if (err) {
 					console.log('Database has some querying error');
 					result =  "Database Error. Please try again Later";
+
 				} else if (dbResult.length) { // if the result is not empty 
 					result = "Username already exists in the database";
-					console.log('test:',result,'b');
+					console.log(result);
+
 					
 				} else {
 					// Create a new user
 					console.log('No record found, this is a new user!');
 					insertNewUser();
-					result = "User created!";
+					result = "Created User!";
 				}
 
 			function insertNewUser() {
@@ -141,18 +143,23 @@ function newConnection(socket) {
 					if (err) {
 						console.log('Error inserting the new user ' + err);
 						result =  "Database Error. Please try again Later"
+
 					} else {
 						console.log(dbResp.insertedCount + ' doc inserted!');
 						result = "User created!";
+
 		
 					}
 					db.close;
 				}) 
 			}// end of insertNewUser func
 
-			socket.broadcast.emit('Registration_Status', result);
+			socket.emit('Registration_Status', result); //this seems to work if socket.emit is inside the main mongo statement
+			console.log("DEBUG: Inside Main Mongo Statement", result) // This will print the correct result. ie "user created!"
 			});
 		});// end of mongoclient connection
+
+		console.log("DEBUG: Outside Main Mongo Statement", result) // this will print "empty". research into promises
 
 		
 	}); //end of "Register a new User"
