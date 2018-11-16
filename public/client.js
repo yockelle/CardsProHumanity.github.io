@@ -1,12 +1,67 @@
-/*
-// Client side JS file
+/* -------------
+Client side JS file
 
-*/
+ -----------------*/ 
 
-// initialize socket connection
+// initialize socket connection. Should only do this once
 var socket = io();
 
+
+/* ----- User Registration ----- */
+function userRegister() {
+	console.log('Sending Registration Data to Server');
+	var inputname = document.getElementById('inputname').value;
+	var inputpass = document.getElementById('inputpass').value;
+
+	//Checks to make sure inputs are good
+	if (inputname != "" && inputpass != "") {
+		var user_data = {
+			username: inputname,
+			password: inputpass
+		}
+		socket.emit("Register", user_data);
+
+		document.getElementById('inputname').value = '';
+		document.getElementById('inputpass').value = '';
+	}	else {
+
+		alert("Username and/Or Password Cannot be blank!")
+	}
+} // end of userRegister
+
+// Registration Listen
+socket.on('Registration_Status', function(data) {
+    alert(data);
+    console.log('Received' + data);
+});	
+
+
+/* ------ User Login ------ */
+function userLogin() {
+	console.log('Send user data to server');
+	var inputname = document.getElementById('inputname').value;
+	var inputpass = document.getElementById('inputpass').value;
+	var user_data = {
+		username: inputname,
+		password: inputpass
+	}
+	socket.emit("AskInput", user_data);
+
+	
+	document.getElementById('inputname').value = '';
+	document.getElementById('inputpass').value = '';
+}
+
+// Login Listen: When Server authenticates login, it will emit a success. This socket will receive it.
+socket.on('Login_Status', function(data) {
+	alert(data);
+	console.log('Received: ' + data)
+});
+
+
+/* ------ Public Board (cards) functions ------ */
 function produceCard(cardID) {
+	
 	// This function is adopted from Aaron - it just makes a div and makes the card
 
 	let mainDiv = document.createElement('div');

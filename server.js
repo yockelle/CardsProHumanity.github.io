@@ -1,32 +1,22 @@
 
 var PORT = process.env.PORT || 8000 ;
 
-// Dependencies 
+/*------------------ Dependencies -----------------*/
 const express = require("express");
 var http = require("http");
 var socketIO = require('socket.io');
-var bodyParser = require('body-parser');
 var mongodb = require('mongodb');
 
-// Initialize 
+/* ----------------- Initialize ------------------ */
 const app = express();
 var server = http.Server(app);
-var io = socketIO(server);
-
+const io = socketIO(server);
 
 app.set("port", PORT); // 8000 as default
 
-/* ---------------- Static  Page ----------------- We won't be using this anymore
-// Looks in /public/index.html for static serving
-app.use('/public', express.static(__dirname + "/public"));
-app.use(express.static("public"));
-*/
-
-/* ----------------- Dynamic Pages  ------------------ */
-// EJS for 'templating' - dynamic web server . Looks in /views/index.ejs
-app.set('view engine', 'ejs');
+/* ----------------- Dynamic Pages  --------------- */
+app.set('view engine', 'ejs'); 
 app.use('/public', express.static(__dirname + "/public")); // this lets us know that all our public files are in that directory
-
 
 // Routing
 app.get(['/','index.html'], function(request, response) {
@@ -37,18 +27,6 @@ app.get(['/','index.html'], function(request, response) {
 });
 
 
-/* --- TODO: css and js  stuff (FRONTEND stuff)  ----------
-app.get('/css/main.css', function(request, response) {
-	response.sendFile( (__dirname + '/public/css/main.css'));
-}); 
-
-app.get('/js/main.js', function(request, response) {
-	response.sendFile( (__dirname + '/public/js/main.js'));
-});
-*/ 
-
-// use bodyparser middleware for JSON requests
-app.use(bodyParser.json());
 
 /* ----------------------- Mongo Code --------------------------------------- */
 // set mongo client - our mlab account
@@ -107,29 +85,26 @@ let AllPlayers = {DEDFAEX : {
 
 				}
 
-
-
-// connection coming from client
+/* ------------------- Socket.IO Code ----------------------- */ 
 io.on('connection', newConnection); // io.socket.on('connection') also works for some reason
 
 function newConnection(socket) {
-
+	// This function is for handling socket connections of the server and client
 	console.log('Connection from: ' + socket.id)
 
-	// Broadcast Card
+	/* ---- Broadcast Card ---- */
 	socket.on('cardPlayed', function broadcastCard(data) {
 		// This function broadcasts the card to everyone 
-
 		console.log('Received' + data.cardid + ' from: ' + data.username);
 		socket.broadcast.emit('cardPlayed', data);
-		// Note: socket.broadcast.emit('cardPlayed', data) 
+
 	});
 
-	// Regsiter 
+	/* ---- Register a new User ---- */
 	socket.on("Register", function userData(user_data) {
 		console.log('Received username:' + user_data.username + ' Received password:' + user_data.password);
 
-		let result = "";
+		var result = "empty";
 
 		// Connection and error handling
 		mongoClient.connect(url, {useNewUrlParser: true}, function(err, db) {
@@ -158,7 +133,6 @@ function newConnection(socket) {
 					insertNewUser();
 					result = "User created!";
 				}
-			});
 
 			function insertNewUser() {
 				// inserts a new user info into the database
@@ -170,18 +144,31 @@ function newConnection(socket) {
 					} else {
 						console.log(dbResp.insertedCount + ' doc inserted!');
 						result = "User created!";
+		
 					}
 					db.close;
 				}) 
 			}// end of insertNewUser func
+
+			socket.broadcast.emit('Registration_Status', result);
+			});
 		});// end of mongoclient connection
 
-		socket.emit('Registration_Status', result);
-	}); //end of "AskInput"
-
 		
+	}); //end of "Register a new User"
+
+
+	/* ---- TODO: Validate a login ---- */
+	socket.on("Login", function userData(user_data) {
+			console.log('Receiving Login request ' + user_data.username + 'with password:' + user_data.password);
+	});
+
+	socket.on('disconnect', () => {
+		console.log('Disconnection from: ' + socket.id);
+	})
 
 }; //end of socket
+
 
 
 
