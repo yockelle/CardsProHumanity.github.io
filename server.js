@@ -86,6 +86,9 @@ let AllPlayers = {DEDFAEX : {
 				}
 
 /* ------------------- Socket.IO Code ----------------------- */ 
+
+let onlinePlayers = {}; //keeps track of all online players {socketId,playerUserName}
+
 io.on('connection', newConnection); // io.socket.on('connection') also works for some reason
 
 function newConnection(socket) {
@@ -167,11 +170,14 @@ function newConnection(socket) {
 
 	/* ---- TODO: Validate a login ---- */
 	socket.on("Login", function userData(user_data) {
+			onlinePlayers[socket.id] = user_data.username;
 			console.log('Receiving Login request ' + user_data.username + 'with password:' + user_data.password);
+			console.log('Current Online Players:',onlinePlayers);
 	});
 
 	socket.on('disconnect', () => {
-		console.log('Disconnection from: ' + socket.id);
+		delete onlinePlayers[socket.id];
+		console.log('Disconnection from: ' + socket.id, 'Current Online Players:',onlinePlayers);
 	})
 
 }; //end of socket

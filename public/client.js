@@ -23,6 +23,7 @@ function userRegister() {
 
 		document.getElementById('inputname').value = '';
 		document.getElementById('inputpass').value = '';
+
 	}	else {
 
 		alert("Username and/Or Password Cannot be blank!")
@@ -41,17 +42,22 @@ function userLogin() {
 	console.log('Send user data to server');
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
-	var user_data = {
-		username: inputname,
-		password: inputpass
-	}
-	socket.emit("AskInput", user_data);
+	
+	//Checks to make sure inputs are good
+	if (inputname != "" && inputpass != "") {
+		var user_data = {
+			username: inputname,
+			password: inputpass
+		}
+		socket.emit("Login", user_data);
 
 	
-	document.getElementById('inputname').value = '';
-	document.getElementById('inputpass').value = '';
+		document.getElementById('inputname').value = '';
+		document.getElementById('inputpass').value = '';
+	} else {
+		alert("Username and/Or Password Cannot be blank!")
+	}
 }
-
 // Login Listen: When Server authenticates login, it will emit a success. This socket will receive it.
 socket.on('Login_Status', function(data) {
 	alert(data);
