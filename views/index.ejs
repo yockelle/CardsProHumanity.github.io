@@ -1,6 +1,21 @@
+
+<!-- import jQuery  -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<!-- import socketio -->
+<script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- import boostrap -->
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<!-- import client javascript, and css styling sheets (this is our own script) -->
+<script src="public/client.js"></script>
+<link rel="stylesheet" type="text/css" href="/public/loginPage.css">
+<link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
+
 
 <!DOCTYPE html>
 <html>
@@ -8,21 +23,6 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Cards against Humanity</title>
-
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
-
-	<!-- The below script are for handling the client side's socket.io -->
-
-	<script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-
-	<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-	<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
-	<script src="/socket.io/socket.io.js"></script>
-	<script src="public/public_board.js"></script>
-	<link rel="stylesheet" type="text/css" href="/public/loginPage.css">
-	<link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
 </head>
 
 <body>
@@ -47,7 +47,7 @@
 							<a href="#">Forgot password?</a>
 						</div>
 						<div id="buttons">
-							<button type="submit" class="btn btn-primary" onclick="userInput()">Login</button></div>
+							<button type="submit" class="btn btn-primary" onclick="userLogin()">Login</button></div>
 						<div id="buttons">
 							<button type="submit" class="btn btn-secondary" onclick="userRegister()">Register</button>
 						</div>
@@ -104,62 +104,6 @@
 </body>
 
 
-
-
-
-
-	<script>
-
-        //Bring in socket.io
-		var socket = io();
-		
-		
-
-		//When user presses the Register Button Click, Send Username/Pass to Server
-		function userRegister() {
-			console.log('Sending Registration Data to Server');
-			var inputname = document.getElementById('inputname').value;
-			var inputpass = document.getElementById('inputpass').value;
-
-			//Checks to make sure inputs are good
-			if (inputname != "" && inputpass != "") {
-				var user_data = {
-					username: inputname,
-					password: inputpass
-				}
-				socket.emit("Register", user_data);
-
-				document.getElementById('inputname').value = '';
-				document.getElementById('inputpass').value = '';
-			}	else {
-
-				alert("Username and/Or Password Cannot be blank!")
-			}
-		}
-
-
-		function userInput() {
-			console.log('Send user data to server');
-			var inputname = document.getElementById('inputname').value;
-			var inputpass = document.getElementById('inputpass').value;
-			var user_data = {
-				username: inputname,
-				password: inputpass
-			}
-			socket.emit("AskInput", user_data);
-
-			
-			document.getElementById('inputname').value = '';
-			document.getElementById('inputpass').value = '';
-		}
-		
-        //listen for stuff from server
-        socket.on('Registration_Status', function(data) {
-            alert(data);
-            console.log('Received' + data);
-        });
-	
-</script>
 
 
 </html>

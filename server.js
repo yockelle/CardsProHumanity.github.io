@@ -10,7 +10,7 @@ var mongodb = require('mongodb');
 /* ----------------- Initialize ------------------ */
 const app = express();
 var server = http.Server(app);
-var io = socketIO(server);
+const io = socketIO(server);
 
 app.set("port", PORT); // 8000 as default
 
@@ -25,17 +25,6 @@ app.get(['/','index.html'], function(request, response) {
 													  userhand: AllPlayers.DEDFAEX.gameSession[1].userhand,
 													  promptCard: AllPlayers.DEDFAEX.gameSession[1].promptCard});
 });
-
-
-/* ------------------ TODO: Frontend CSS and JS --------------- 
-app.get('/css/main.css', function(request, response) {
-	response.sendFile( (__dirname + '/public/css/main.css'));
-}); 
-
-app.get('/js/main.js', function(request, response) {
-	response.sendFile( (__dirname + '/public/js/main.js'));
-});
-*/ 
 
 
 
@@ -96,14 +85,11 @@ let AllPlayers = {DEDFAEX : {
 
 				}
 
-
-
 /* ------------------- Socket.IO Code ----------------------- */ 
 io.on('connection', newConnection); // io.socket.on('connection') also works for some reason
 
 function newConnection(socket) {
 	// This function is for handling socket connections of the server and client
-
 	console.log('Connection from: ' + socket.id)
 
 	/* ---- Broadcast Card ---- */
@@ -147,7 +133,6 @@ function newConnection(socket) {
 					insertNewUser();
 					result = "User created!";
 				}
-			});
 
 			function insertNewUser() {
 				// inserts a new user info into the database
@@ -159,13 +144,17 @@ function newConnection(socket) {
 					} else {
 						console.log(dbResp.insertedCount + ' doc inserted!');
 						result = "User created!";
+		
 					}
 					db.close;
 				}) 
 			}// end of insertNewUser func
+
+			socket.broadcast.emit('Registration_Status', result);
+			});
 		});// end of mongoclient connection
 
-		socket.emit('Registration_Status', result);
+		
 	}); //end of "Register a new User"
 
 
@@ -174,7 +163,12 @@ function newConnection(socket) {
 			console.log('Receiving Login request ' + user_data.username + 'with password:' + user_data.password);
 	});
 
+	socket.on('disconnect', () => {
+		console.log('Disconnection from: ' + socket.id);
+	})
+
 }; //end of socket
+
 
 
 
