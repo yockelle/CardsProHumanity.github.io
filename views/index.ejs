@@ -47,9 +47,9 @@
 							<a href="#">Forgot password?</a>
 						</div>
 						<div id="buttons">
-							<button type="submit" class="btn btn-primary" onclick="userInput()">Login</button></div>
+							<button type="button" class="btn btn-primary" onclick="userInput()">Login</button></div>
 						<div id="buttons">
-							<button type="submit" class="btn btn-secondary" onclick="userRegister()">Register</button>
+							<button type="button" class="btn btn-secondary" onclick="userRegister()">Register</button>
 						</div>
 					</form>
 				</div>
@@ -118,6 +118,7 @@
 		//When user presses the Register Button Click, Send Username/Pass to Server
 		function userRegister() {
 			console.log('Sending Registration Data to Server');
+
 			var inputname = document.getElementById('inputname').value;
 			var inputpass = document.getElementById('inputpass').value;
 
@@ -131,9 +132,12 @@
 
 				document.getElementById('inputname').value = '';
 				document.getElementById('inputpass').value = '';
+
+				e.preventDefault(); //prevents the page from refreshing
 			}	else {
 
 				alert("Username and/Or Password Cannot be blank!")
+
 			}
 		}
 
