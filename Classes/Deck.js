@@ -59,7 +59,6 @@ module.exports = class Deck {
         return card;
     }
 
-    addNewCard
 
 
 }
