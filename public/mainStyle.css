@@ -1,7 +1,7 @@
 html, body {
     height: 100%;
-    overflow: hidden;
 }
+
 
 #LoginForm {
     display: block;
@@ -9,6 +9,11 @@ html, body {
 
 #Game {
     display: none;
+}
+
+#Lobby {
+    display: none;
+    height: 100%;
 }
 
 .card{
@@ -25,11 +30,11 @@ html, body {
     box-shadow: 0 8px 16px 0 rgba(243, 238, 238, 0.2);
 }
 
-.container {
+/* .container {
     padding: 2px 16px;
     background-color: gray;
     color: white;
-}
+} */
 
 .button {
     background-color: #4CAF50;
