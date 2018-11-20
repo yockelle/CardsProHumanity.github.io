@@ -193,12 +193,12 @@ function newConnection(socket) {
 	/* ---- TODO: Validate a login ---- */
 	socket.on("Login", function userData(user_data) {
 
-		onlinePlayers[socket.id] = user_data.username;
-
 		let query = {
 			username: user_data.username,
 			password: user_data.password
 		}
+
+		let result;
 
 		// Connection and error handling
 		mongoClient.connect(url, {
@@ -218,23 +218,22 @@ function newConnection(socket) {
 			userCollection.find(query).toArray((err, dbResult) => {
 				if (err) {
 					console.log('Database has some querying error');
-
+					result = {sucess:false,message:"Database Error. Please try again Later"};
+				
 				} else if (dbResult.length) { // if the result is not empty 
-					console.log(dbResult);
-					console.log("Username and Password Exists!. User Found");
-
-
+					console.log("Username and Password Matches!. User is authenticated");
+					result = {sucess:true,message:"User login Sucess!"};
+					onlinePlayers[socket.id] = user_data.username;
 				} else {
 					// Usernand and password does not match
-					console.log('No record found, this is a new user!');
+					console.log("Invalid username or password");
+					result = {sucess:false,message:"Invalid username or password"};
 				}
-
-				//socket.emit('Registration_Status', result); //this seems to work if socket.emit is inside the main mongo statement
+				socket.emit('Login_Status', result); 
 			});
 		}); // end of mongoclient connection			
 
-
-		console.log('Receiving Login request ' + user_data.username + 'with password:' + user_data.password);
+		console.log('Receiving Login request ' + user_data.username + ' with password:' + user_data.password);
 		console.log('Current Online Players:', onlinePlayers);
 	});
 
@@ -244,6 +243,12 @@ function newConnection(socket) {
 	})
 
 }; //end of socket
+
+//send list of online players to client ever second.
+setInterval(() => {
+    io.emit('Online_Players_List', onlinePlayers);
+}, 100);
+
 
 
 // Start Server Listening
