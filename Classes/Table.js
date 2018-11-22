@@ -1,72 +1,56 @@
 const Deck = require('./Deck');
 
 module.exports = class Table {
-    constructor(gameID,PlayersList) {
+    constructor(PlayersList) {
+        /* Constructs a game with given PlayersList:
+        PlayersList : Array of Players.
+        PlayerDeck : Deck , Array of Cards
+        PromptDeck : Deck , Array of Cards 
+        promptCard : Current card
+        */
         this.PlayersList = PlayersList;
         this.PlayerDeck = new Deck("Player");
         this.PromptDeck = new Deck("Prompt");
-        // this.gameID = gameID;
-        // this.status = "Open";
-        
-        // this.scores = {};
-        // this.round;
-        // this.currJudge;
+                
+        this.scores = {};
         this.promptCard;
-        this.handCards = {};
-        this.tableCards = {};
+
+        // Array to hold all cards submitted for the Judge to select
+        this.judgeHand = []; 
   }
 
+    // Getters
+    getPlayersList() {
+        return this.PlayersList;
+    }
+
+    getPlayerCount() { 
+        return this.PlayersList.length;
+    }
+
+
+    // Table initialization functions
     dealStartingCards(n = 5) {
-
-        //Give 5 Cards to each Player
-        for(let i = 0; i < this.PlayersList.length; i++) {
-            let currPlayer = this.PlayersList[i].uniqueId;
-            let hand = [];
-
-            //draw 5 cards
-            for (let j = 0; j < n; j++) {
-                let currCard = this.PlayerDeck.drawCard();
-                hand.push(currCard);
-            }
-
-            this.handCards[currPlayer] = hand;
-        }
-
+        // For each player, draw 5 cards from PlayerDeck
+        this.PlayersList.map( player => player.drawCards(this.PlayerDeck, n) ) ;     
     }
-
-    playCard(player,card) {
-
-        let playerId = player.uniqueId;
-        let playerHand = this.handCards[playerId];
-
-        let indexOfCard = this.__findIndexOfCard(card,playerHand);
-
-        //remove from hand
-        this.handCards[playerId].splice(indexOfCard, 1) //remove card and assign
-
-        //add card to tableCards
-        this.tableCards[playerId] = card;
-        
-    }
-
-    __findIndexOfCard(card, hand) {
-
-        //loop through the cards that the player has
-        for(let i = 0; i < hand.length; i++) {
-            let currCardID = hand[i].id;
-            if(card.id === currCardID) {
-
-                return i;
-            }
-        }
-
-        return -1;
-
-    }
-
 
     dealPromptCard() {
         this.promptCard = this.PromptDeck.drawCard();
+    }
+
+    initializeScores() {
+        // Scores is a Hashmap. Key = username, Value = score
+        for (let i = 0; i < this.PlayersList.length; i++) {
+            let key = this.PlayersList[i].username
+            this.scores[key] = 0; 
+        }
+    }
+
+
+    pushJudge(card) {
+        // Pushes card played to judgeHand
+        this.judgeHand.push(card);
     }
 
     resetTable() {

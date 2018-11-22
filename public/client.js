@@ -71,6 +71,8 @@ socket.on('Online_Players_List', function (data) {
 
 	k += '</ul>';
 	document.getElementById('PlayerList').innerHTML = k;
+
+
 });
 
 
@@ -107,7 +109,30 @@ socket.on('Login_Status', function (data) {
 
 });
 
-/* ------ Public Board (cards) functions ------ */
+
+/* ----- Game Start ---- */
+function initGame() {
+	// Function launched when Start game button is pressed.
+	socket.emit("initGame", true);
+}
+
+socket.on('game_start', function(data) {
+	// Starts the game by hiding the appropriate divs
+
+	console.log("Game has started");
+	
+	// Turn off lobby and login form div
+	document.getElementById("Lobby").style.display = "none";
+	document.getElementById("LoginForm").style.display = "none";
+	
+	// Turn on  Game div
+	document.getElementById("Game").style.display = "block";
+	document.getElementById("PlayerHand").style.display = "block";
+	//document.getElementById("").style.display = "block";
+});
+
+
+/* ------ Board (cards) functions ------ */
 function produceCard(cardID) {
 
 	// This function is adopted from Aaron - it just makes a div and makes the card
@@ -117,7 +142,7 @@ function produceCard(cardID) {
 
 	let image = document.createElement("IMG");
 	image.setAttribute("src", "https://cardsagainsthumanity.com/images/BlackCard.png");
-	image.setAttribute("width", "35%");
+	image.setAttribute("width", "100%");
 	image.setAttribute("alt", "Avatar");
 
 	let insideDiv = document.createElement('div');

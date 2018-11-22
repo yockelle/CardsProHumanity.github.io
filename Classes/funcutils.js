@@ -1,5 +1,7 @@
 /* This module is just for utility functions that mimic Python for easier coding */
 
+
+
 module.exports = {
 	
 	range: function (start, end, step=1) {
@@ -16,5 +18,7 @@ module.exports = {
 
 		return list;
 	}
+
+	
 
 }
