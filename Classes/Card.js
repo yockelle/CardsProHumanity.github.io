@@ -1,18 +1,13 @@
 
 module.exports = class Card {
-    constructor(id, value) {
-        this.cardValue = value;
+
+	constructor(id) {
         this.id = id;
-
-  }
-
-  toString() {
-    return this.cardValue;
-  };
-
-
-
-
-
+        this.value = "empty";
+	}
+	
+	toString() {
+    	return "CID#" +  this.id;
+  	};
 
 }

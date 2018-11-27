@@ -6,14 +6,19 @@ Client side JS file
 // initialize socket connection. Should only do this once
 var socket = io();
 
+// Store username & socketid client side 
+var user = {
+	username: "null",
+	socket_id: "null"
+}
 
-/* ----- User Registration ----- */
+/* ---------- User Registration ---------- */
 function userRegister() {
 	console.log('Sending Registration Data to Server');
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
 
-	//Checks to make sure inputs are good
+	// Checking if input is valid
 	if (inputname != "" && inputpass != "") {
 		var user_data = {
 			username: inputname,
@@ -64,19 +69,22 @@ socket.on('Online_Players_List', function (data) {
 			'<img class="rounded-circle" src="/public/Player_Avatar.jpg">' +
 			'</div>' +
 			'<div class="media-body">');
-		k += ('<h4>'+ data[key]+ '</h4>');
-		k += ('<p>SocketID: '+key+ '</p>');
+		k += ('<h4>'+ data[key] + '</h4>');
+		k += ('<p>SocketID: '+ key + '</p>');
 		k += ('</div></div></li>');
 	};
 
 	k += '</ul>';
 	document.getElementById('PlayerList').innerHTML = k;
+
+
 });
 
 
-/* ------ User Login ------ */
+/* ----------- User Login ----------- */
 function userLogin() {
-	console.log('Send user data to server');
+	
+	// console.log('Sending user login info to server');
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
 
@@ -86,81 +94,127 @@ function userLogin() {
 			username: inputname,
 			password: inputpass
 		}
+		
 		socket.emit("Login", user_data);
-
 
 		document.getElementById('inputname').value = '';
 		document.getElementById('inputpass').value = '';
+	
 	} else {
 		alert("Username and/Or Password Cannot be blank!")
 	}
 }
-// Login Listen: When Server authenticates login, it will emit a success. This socket will receive it.
-socket.on('Login_Status', function (data) {
 
-	console.log('Login Status: ' + data);
-	if (data.sucess) {
+// Login Status listen
+socket.on('Login_Status', function (data) {
+	alert(data.message);
+	console.log('Login Status: ' + data.message);
+	if (data.success) {
 		document.getElementById("Lobby").style.display = "block";
 		document.getElementById("LoginForm").style.display = "none";
 
+		// will also update the global user
+		user['username'] = data.username;
+		user['socket_id'] = socket.id;
+		console.log("Succesful login: " + user['username'], user['socket_id']);
 	}
 });
 
-/* ------ Public Board (cards) functions ------ */
-function produceCard(cardID) {
 
-	// This function is adopted from Aaron - it just makes a div and makes the card
-
-	let mainDiv = document.createElement('div');
-	mainDiv.className = 'card';
-
-	let image = document.createElement("IMG");
-	image.setAttribute("src", "https://cardsagainsthumanity.com/images/BlackCard.png");
-	image.setAttribute("width", "35%");
-	image.setAttribute("alt", "Avatar");
-
-	let insideDiv = document.createElement('div');
-	insideDiv.className = 'container';
-	let h4 = document.createElement('H4')
-	let boldText = document.createElement('strong').appendChild(document.createTextNode(cardID));
-	h4.appendChild(boldText);
-
-	insideDiv.appendChild(h4);
-	insideDiv.appendChild(document.createElement("P")).appendChild(document.createTextNode("Player Card"));
-
-	mainDiv.appendChild(image);
-	mainDiv.appendChild(insideDiv);
-
-	document.getElementById("CardDisplayField").appendChild(mainDiv);
+/* ---------- Game Start --------- */
+function initGame() {
+	// Emitted upon 'Start' button click
+	socket.emit("initGame", true);
 }
 
+// game start listenining - hiding appropriate divs
+socket.on('game_start', function (playerHands) {
 
-// Listening from Server (receiving)
+	console.log("Game has started");
+	
+	// Turn off lobby and login form div
+	document.getElementById("Lobby").style.display = "none";
+	document.getElementById("LoginForm").style.display = "none";
+	
+	// Turn on  Game div
+	document.getElementById("Game").style.display = "block";
+	document.getElementById("PlayerHand").style.display = "block";
+	document.getElementById("usersInGame").style.display = "block";
+
+});
+
+
+
+
+/* ----------- GAME LOGIC functions ----------- */
+
+/* ----- HTML updating ----- */ 
+socket.on('updatePlayersInGame', updatePlayersInGame)
+
+function updatePlayersInGame(playersList) {
+
+	// Function to update the HTML 
+	let k = ('<h3> Players In Game: </h3> ') ;
+	
+	for (let i = 0; i < playersList.length; i++) {
+		
+		if (playersList[i].judge) {
+			
+			k += '<font color="red">' 
+			 	+ playersList[i].username 
+			 	+ '</font>';			
+		} else {
+			k += '<small> '
+				+ playersList[i].username
+				+ '</small>'
+		};
+	};
+
+	document.getElementById('usersInGame').innerHTML = k;
+};
+
+/* ----- Player Hand ----- */
+socket.on('updateHand', function updateHand(new_hand) {
+	console.log("updating hand");
+	
+	let k = ('<h3> Current Hand: Click a card to play </h3>');
+	for (let i = 0; i < new_hand.length; i++) {
+		k += '<button id="card-CSS" onclick="sendCard(' + i + ')"> ' + new_hand[i].id + ' </button>"'
+	};
+
+	document.getElementById('PlayerHand').innerHTML = k;
+});
+
+/* ----- Judge Hand ------ */
+socket.on('judge', function judgemode(judge_hand) {
+	console.log(" You are judge! ");
+	document.getElementById('PlayerHand').style.display = "none"; // instead of hiding display, we can just disable buttons
+	document.getElementById('JudgeSelect').style.display = "block";
+
+});
+
+/* ------ Card Played ----- */ 
 socket.on('cardPlayed', function cardPlayed(data) {
 
-	// This function receives a card being played from the server, and updates the HTML.
-	// Receives data:
-	// Which is a JSON objct with username (socketid), and the cardid played 
-
-	console.log("I have received a card being played from: " + data.username);
+	console.log("Received a card being played from: " + data.username);
 
 	let cardid = data.cardid;
-	produceCard(cardid);
+	
 
 
 });
 
-function sendCard(cardid) {
+function sendCard(card_idx) {
 
-	// Function activated when a button is clicked. Sends the card being played to the server, and the socket.id of who sent it
+	// Sends card_played
 
 	var data = {
-		cardid: cardid,
-		username: socket.id
+		card_idx: card_idx,
+		username: user.username,
+		socket_id: user.socket_id
 	}
 
-	console.log('Sending the card ' + data.cardid + ' to Server');
-	produceCard(cardid);
+	console.log('Sending the card ' + data.card_id + ' to Server');
 	socket.emit('cardPlayed', data);
 
 }

@@ -1,126 +1,56 @@
 var PORT = process.env.PORT || 8000;
 
-/*------------------ Dependencies -----------------*/
+/* ---------- Dependencies ---------- */
 const express = require("express");
 var http = require("http");
 var socketIO = require('socket.io');
 var mongodb = require('mongodb');
 
-/* ----------------- Initialize ------------------ */
+/*---------- Game Logic Dependencies ---------- */
+const Game = require('./Classes/game');
+
+/* ---------- Initialize ---------- */
 const app = express();
 var server = http.Server(app);
 const io = socketIO(server);
+var table = new Game();
 
 app.set("port", PORT); // 8000 as default
 
-/* ----------------- Dynamic Pages  --------------- */
+
+/* ---------- Dynamic Pages  ---------- */
 app.set('view engine', 'ejs');
 app.use('/public', express.static(__dirname + "/public")); // this lets us know that all our public files are in that directory
 
-// Routing
-app.get(['/', 'index.html'], function (request, response) {
-	// The argument below will be replaced with JSON from the database
+app.get(['/', 'index.html'], (request, response) => {
 	response.render(__dirname + '/views/index.ejs', {
-		username: AllPlayers.DEDFAEX.username,
-		userhand: AllPlayers.DEDFAEX.gameSession[1].userhand,
-		promptCard: AllPlayers.DEDFAEX.gameSession[1].promptCard
+		username: "pointless",
+		userhand: [" Fake Text", " blah", "oogly", "merry", "christmas"], 
+		promptCard: "pointless",
+		playercount: 0
 	});
 });
 
 
-
-/* ----------------------- Mongo Code --------------------------------------- */
+/* ---------- Mongo Code ---------- */
 // set mongo client - our mlab account
 const mongoClient = mongodb.MongoClient;
 const url = 'mongodb://teamemoji:emoji1234@ds163013.mlab.com:63013/cardsagainsthumanity';
 
 
-/* Setting up variables (Idealy this should be in MongoDB)*/
-//this stores all the promptCards
-let promptCards = {
-	0: {
-		cardid: 0,
-		cardValue: 'Daddy why is mommy crying?'
-	},
-	1: {
-		cardid: 1,
-		cardValue: 'What does Dick Cheney prefer?'
-	},
-	2: {
-		cardid: 2,
-		cardValue: 'I drink to forget __'
-	},
-};
+/* ---------- Socket.IO Code ---------- */
 
 
-/* Setting up variables (Idealy this should be in MongoDB)*/
-//this stores all the playerCards
-let Cards = {
-	0: {
-		cardid: 0,
-		cardValue: 'Drinking alone'
-	},
-	1: {
-		cardid: 1,
-		cardValue: 'The glass ceiling,'
-	},
-	2: {
-		cardid: 2,
-		cardValue: 'Sample2'
-	},
-};
 
-/* Setting up variables (Idealy this should be in MongoDB)*/
-//this stores all the player/game info
-let AllPlayers = {
-	DEDFAEX: {
-		username: 'Joe_Schmoe',
-		password: "abc",
-		unquieID: "DEDFAEX",
-		gameSession: {
-			1: {
-				numberOfCards: 3,
-				userhand: [Cards[0], Cards[1], Cards[2]],
-				promptCard: promptCards[0],
-			}
-		},
-	},
-
-	EFADFEDA: {
-		username: 'Sam_Smith',
-		password: "abc",
-		unquieID: "EFADFEDA",
-		gameSession: {
-			1: {
-				numberOfCards: 2,
-				userhand: [Cards[0], Cards[2]],
-				promptCard: promptCards[0],
-			}
-		},
-	}
-
-}
-
-/* ------------------- Socket.IO Code ----------------------- */
-
-let onlinePlayers = {}; //keeps track of all online players {socketId,playerUserName}
-
-io.on('connection', newConnection); // io.socket.on('connection') also works for some reason
+io.on('connection', newConnection); 
 
 function newConnection(socket) {
 	// This function is for handling socket connections of the server and client
 	console.log('Connection from: ' + socket.id)
 
-	/* ---- Broadcast Card ---- */
-	socket.on('cardPlayed', function broadcastCard(data) {
-		// This function broadcasts the card to everyone 
-		console.log('Received' + data.cardid + ' from: ' + data.username);
-		socket.broadcast.emit('cardPlayed', data);
-
-	});
-
-	/* ---- Register a new User ---- */
+	/* ---------- User Registration ---------- */
 	socket.on("Register", function userData(user_data) {
+		
 		console.log('Received username:' + user_data.username + ' Received password:' + user_data.password);
 
 		var result = "empty";
@@ -136,7 +66,7 @@ function newConnection(socket) {
 			}
 
 			// access the collection 'users' to register the name
-			const cohDB = db.db('cardsagainsthumanity'); // https://stackoverflow.com/questions/43779323/typeerror-db-collection-is-not-a-function
+			const cohDB = db.db('cardsagainsthumanity');
 			const userCollection = cohDB.collection('users');
 
 			// see if the username already exists in the server:
@@ -144,13 +74,13 @@ function newConnection(socket) {
 				username: user_data.username
 			}).toArray((err, dbResult) => {
 				if (err) {
+					
 					console.log('Database has some querying error');
 					result = "Database Error. Please try again Later";
 
 				} else if (dbResult.length) { // if the result is not empty 
 					result = "Username already exists in the database";
 					console.log(result);
-
 
 				} else {
 					// Create a new user
@@ -173,7 +103,6 @@ function newConnection(socket) {
 						} else {
 							console.log(dbResp.insertedCount + ' doc inserted!');
 							result = "User created!";
-
 						}
 						db.close;
 					})
@@ -186,19 +115,27 @@ function newConnection(socket) {
 
 		console.log("DEBUG: Outside Main Mongo Statement", result) // this will print "empty". research into promises
 
-
 	}); //end of "Register a new User"
 
+<<<<<<< HEAD
 	/* ---- TODO: Validate a login ---- */
+=======
+
+	/* ---------- User Login ----------*/
+>>>>>>> ba1e0c459183324e06f1e45df703c40b9e699317
 	socket.on("Login", function userData(user_data) {
 
 		let query = {
 			username: user_data.username,
 			password: user_data.password
-		}
+		}; 
 
-		let result;
-
+		let result = {
+			success: false,
+			message: "empty message",
+			username: "empty user"
+		}; 
+	
 		// Connection and error handling
 		mongoClient.connect(url, {
 			useNewUrlParser: true
@@ -217,40 +154,96 @@ function newConnection(socket) {
 			userCollection.find(query).toArray((err, dbResult) => {
 				if (err) {
 					console.log('Database has some querying error');
-					result = {sucess:false,message:"Database Error. Please try again Later"};
+					result = {success:false,message:"Database Error. Please try again Later", username: user_data.username};
 				
-				} else if (dbResult.length) { // if the result is not empty 
+				} else if (dbResult.length) { // Found matching username/password combo 
 					console.log("Username and Password Matches!. User is authenticated");
-					result = {sucess:true,message:"User login Sucess!"};
-					onlinePlayers[socket.id] = user_data.username;
+					result = {success:true,message:"User login Sucess!",username: user_data.username};
+					
+					// Add new player to the table
+					table.addPlayer(username = user_data.username, socket_id = socket.id);
+					
 				} else {
-					// Usernand and password does not match
+					// Username and and password does not match
 					console.log("Invalid username or password");
-					result = {sucess:false,message:"Invalid username or password"};
+					result = {success:false,message:"Invalid username or password", username: user_data.username};
 				}
+				
 				socket.emit('Login_Status', result); 
 			});
 		}); // end of mongoclient connection			
 
 		console.log('Receiving Login request ' + user_data.username + ' with password:' + user_data.password);
-		console.log('Current Online Players:', onlinePlayers);
+		console.log('Current Online Players:');
 	});
 
 	socket.on('disconnect', () => {
-		delete onlinePlayers[socket.id];
-		console.log('Disconnection from: ' + socket.id, 'Current Online Players:', onlinePlayers);
-	})
+		
+		// Handle disconnected players
+		table.PlayersList.find( (element) => {
+			if (element.socket_id === socket.id) {
+				element.connect = false;
+			}
+		});
 
-}; //end of socket
+		console.log('Disconnection from: ' + socket.id, 'Current Online Players:', table.PlayersList);
+	});
+
+	/* ---------- Game Start ---------- */
+
+	socket.on('initGame', function (canStart) {
+		if (canStart) {
+			io.emit('game_start', true); // io.emit sends to ALL clients, socket.broadcast.emit sends to all but the sender
+			table.initGame();
+
+			console.log(table.PlayersList); 
+			// Send player's hands to each socket
+			for (let i = 0; i < table.PlayersList.length; i++) {
+				let player = table.PlayersList[i];
+
+				console.log("emitting to ", player.username, player.socket_id);
+				io.to(player.socket_id).emit('updateHand', player.hand);
+			}
+
+			io.emit('updatePlayersInGame', table.PlayersList); 
+		}
+
+	});
+
+	/* ---------- Board (cards) function ---------- */
+	socket.on('cardPlayed', function broadcastCard(data) {
+		// Receives card being played by player. 
+		console.log('Received card at index:  ' + data.card_idx + ' from: ' + data.username);
+		
+		// Only allow players that haven't played a card yet to play
+		if (!table.played.includes(data.username)) {	
+			
+			console.log("Successfully playing card from" + data.username + data.card_idx);
+			table.played.push(data.username);
+			table.cardPlayed(data.card_idx, data.username);
+			
+			io.emit('cardPlayed', data);
+		};
+
+		
+	});
+
+
+}; //end of newConnection socket function
 
 //send list of online players to client ever second.
 setInterval(() => {
-    io.emit('Online_Players_List', onlinePlayers);
+    io.emit('Online_Players_List', table.onlinePlayersList);
 }, 100);
 
 
+<<<<<<< HEAD
 // Start Server Listening
 
+=======
+
+/* ---------- Start Server Listening ---------- */
+>>>>>>> ba1e0c459183324e06f1e45df703c40b9e699317
 server.listen(app.get("port"), function () {
 	console.log("Server started on port %s", app.get("port"));
 });
