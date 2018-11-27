@@ -14,6 +14,7 @@ const app = express();
 var server = http.Server(app);
 const io = socketIO(server);
 var table = new Game();
+var totalOnlinePlayers = {};
 
 app.set("port", PORT); // 8000 as default
 
@@ -39,9 +40,6 @@ const url = 'mongodb://teamemoji:emoji1234@ds163013.mlab.com:63013/cardsagainsth
 
 
 /* ---------- Socket.IO Code ---------- */
-
-
-
 io.on('connection', newConnection); 
 
 function newConnection(socket) {
@@ -151,14 +149,11 @@ function newConnection(socket) {
 				if (err) {
 					console.log('Database has some querying error');
 					result = {success:false,message:"Database Error. Please try again Later", username: user_data.username};
-				
 				} else if (dbResult.length) { // Found matching username/password combo 
 					console.log("Username and Password Matches!. User is authenticated");
 					result = {success:true,message:"User login Sucess!",username: user_data.username};
-					
-					// Add new player to the table
-					table.addPlayer(username = user_data.username, socket_id = socket.id);
-					
+					totalOnlinePlayers[socket.id] = user_data.username;
+					console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
 				} else {
 					// Username and and password does not match
 					console.log("Invalid username or password");
@@ -181,14 +176,35 @@ function newConnection(socket) {
 				element.connect = false;
 			}
 		});
-
+		delete totalOnlinePlayers[socket.id];
 		console.log('Disconnection from: ' + socket.id, 'Current Online Players:', table.PlayersList);
 	});
 
 	/* ---------- Game Start ---------- */
+	socket.on('joinGameOne', function() {
+		if (table.getPlayerCount() < 2) {
+			let isFound = false;
+			// Check if player exists in table (Game 1)
+			for (var i = 0; i < table.PlayersList.length; i++) {
+				console.log('Checking player ' + totalOnlinePlayers[socket.id] + " with PlayerList" + table.PlayersList[i].username);
+				if (totalOnlinePlayers[socket.id] == table.PlayersList[i].username) {
+					isFound = true;
+					break;	
+				}
+			}
+			if (!isFound) {
+				console.log("Adding player!");
+				table.addPlayer(username = totalOnlinePlayers[socket.id], socket_id = socket.id);
+			} else {
+				console.log("Player " + totalOnlinePlayers[socket.id] + " is already in the game");
+			}
+		} else {
+			console.log("Game is full.");
+		}
+	});
 
 	socket.on('initGame', function (canStart) {
-		if (canStart) {
+		if (canStart && table.getPlayerCount() >= 2) {
 			io.emit('game_start', true); // io.emit sends to ALL clients, socket.broadcast.emit sends to all but the sender
 			table.initGame();
 
@@ -202,8 +218,9 @@ function newConnection(socket) {
 			}
 
 			io.emit('updatePlayersInGame', table.PlayersList); 
+		} else {
+			console.log("Need to wait for more players.");
 		}
-
 	});
 
 	/* ---------- Board (cards) function ---------- */
@@ -227,10 +244,11 @@ function newConnection(socket) {
 
 }; //end of newConnection socket function
 
-//send list of online players to client ever second.
+//send list of online players to client every second.
 setInterval(() => {
-    io.emit('Online_Players_List', table.onlinePlayersList);
-}, 100);
+	// Emit All online players, # players joined game 1
+    io.emit('Online_Players_List', totalOnlinePlayers, table.getPlayerCount());
+}, 1000);
 
 
 

@@ -42,9 +42,7 @@ socket.on('Registration_Status', function (data) {
 });
 
 // Online_Players_list Listen
-socket.on('Online_Players_List', function (data) {
-
-
+socket.on('Online_Players_List', function (data, num_players_g1) {
 	/* <ul id="sortable">
 		<li>
 			<div class="media">
@@ -58,7 +56,6 @@ socket.on('Online_Players_List', function (data) {
 			</div>
 		</li>
 	</ul> */
-
 	let k = ('<ul id="sortable">');
 	for (key in data) {
 		console.log("Current Players:", "SocketID: ", key, "UserName: ", data[key])
@@ -73,9 +70,14 @@ socket.on('Online_Players_List', function (data) {
 		k += ('<p>SocketID: '+ key + '</p>');
 		k += ('</div></div></li>');
 	};
-
 	k += '</ul>';
 	document.getElementById('PlayerList').innerHTML = k;
+
+
+	
+	let num_g1 = ('<p id="num_players_g1">Current Players: ' + num_players_g1 + '</p>');
+	document.getElementById("num_players_g1").innerHTML = num_g1;
+
 
 
 });
@@ -121,8 +123,11 @@ socket.on('Login_Status', function (data) {
 
 });
 
-
 /* ---------- Game Start --------- */
+function joinGameOne() {
+	socket.emit("joinGameOne");
+}
+
 function initGame() {
 	// Emitted upon 'Start' button click
 	socket.emit("initGame", true);
