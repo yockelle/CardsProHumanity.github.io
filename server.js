@@ -182,43 +182,47 @@ function newConnection(socket) {
 
 	/* ---------- Game Start ---------- */
 	socket.on('joinGameOne', function() {
+		// Check the max amount of players per game before joining
 		if (table.getPlayerCount() < 2) {
-			let isFound = false;
-			// Check if player exists in table (Game 1)
-			for (var i = 0; i < table.PlayersList.length; i++) {
-				console.log('Checking player ' + totalOnlinePlayers[socket.id] + " with PlayerList" + table.PlayersList[i].username);
-				if (totalOnlinePlayers[socket.id] == table.PlayersList[i].username) {
-					isFound = true;
-					break;
-				}
-			}
-			if (!isFound) {
+			// Check if player is in game. Add if not in game.
+			if (!table.isPartofGame(totalOnlinePlayers, socket.id)) {
 				console.log("Adding player!");
 				table.addPlayer(username = totalOnlinePlayers[socket.id], socket_id = socket.id);
 			} else {
 				console.log("Player " + totalOnlinePlayers[socket.id] + " is already in the game");
 			}
 		} else {
-			console.log("Game is full.");
+			// Show game is full only to person not in game
+			if (!table.isPartofGame(totalOnlinePlayers, socket.id)) {
+				console.log("Game is full.");
+				let message = "Game is full.";
+				io.to(socket.id).emit('game_start', false, message);
+			}
 		}
 	});
 
 	socket.on('initGame', function (canStart) {
 		if (canStart && table.getPlayerCount() >= 2) {
-			let message = "Game started!";
-			io.emit('game_start', true, message); // io.emit sends to ALL clients, socket.broadcast.emit sends to all but the sender
-			table.initGame();
+			// Only players part of game can press start
+			if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
+				let message = "Game started!";
+				io.emit('game_start', true, message); // io.emit sends to ALL clients, socket.broadcast.emit sends to all but the sender
+				table.initGame();
 
-			console.log(table.PlayersList); 
-			// Send player's hands to each socket
-			for (let i = 0; i < table.PlayersList.length; i++) {
-				let player = table.PlayersList[i];
+				console.log(table.PlayersList); 
+				// Send player's hands to each socket
+				for (let i = 0; i < table.getPlayerCount(); i++) {
+					let player = table.PlayersList[i];
 
-				console.log("emitting to ", player.username, player.socket_id);
-				io.to(player.socket_id).emit('updateHand', player.hand);
+					console.log("emitting to ", player.username, player.socket_id);
+					io.to(player.socket_id).emit('updateHand', player.hand);
+				}
+
+				io.emit('updatePlayersInGame', table.PlayersList); 
+			} else {
+				let message = "You cannot start a game you are not part of!";
+				io.to(socket.id).emit('game_start', false, message);
 			}
-
-			io.emit('updatePlayersInGame', table.PlayersList); 
 		} else {
 			let message = "Game 1 needs at least 2 or more players!";
 			io.emit('game_start', false, message);

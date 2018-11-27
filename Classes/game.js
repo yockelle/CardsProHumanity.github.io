@@ -38,6 +38,19 @@ module.exports = class Game {
 		return count;
 	}
 
+	isPartofGame(totalOnlinePlayers, socket_id) {
+		let isFound = false;
+		for (var i = 0; i < this.getPlayerCount(); i++) {
+			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
+				isFound = true;
+				break;
+			}
+		}
+		return isFound;
+	}
+
+
+
 	setSocket(socket) {
 		this.socket = socket;
 	}
