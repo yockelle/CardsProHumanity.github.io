@@ -39,7 +39,7 @@ socket.on('Registration_Status', function (data) {
 // Online_Players_list Listen
 socket.on('Online_Players_List', function (data) {
 
-
+//HTML TEMPLATE
 	/* <ul id="sortable">
 		<li>
 			<div class="media">
@@ -97,14 +97,13 @@ function userLogin() {
 }
 // Login Listen: When Server authenticates login, it will emit a success. This socket will receive it.
 socket.on('Login_Status', function (data) {
-	alert(data.message);
+
 	console.log('Login Status: ' + data);
 	if (data.sucess) {
 		document.getElementById("Lobby").style.display = "block";
 		document.getElementById("LoginForm").style.display = "none";
 
 	}
-
 });
 
 /* ------ Public Board (cards) functions ------ */

@@ -189,7 +189,6 @@ function newConnection(socket) {
 
 	}); //end of "Register a new User"
 
-
 	/* ---- TODO: Validate a login ---- */
 	socket.on("Login", function userData(user_data) {
 
@@ -248,7 +247,6 @@ function newConnection(socket) {
 setInterval(() => {
     io.emit('Online_Players_List', onlinePlayers);
 }, 100);
-
 
 
 // Start Server Listening
