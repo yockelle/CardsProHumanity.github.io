@@ -120,6 +120,47 @@ socket.on('Login_Status', function (data) {
 	}
 });
 
+/*-----------Create custom cards--------*/
+var cardNum = 1; //Keeps track of new cards entered by user
+var cardsToAdd = []; //Array to hold new cards user enters
+
+//Turns off lobby and login divs and turns on CustomCard div
+function cardCreator() {
+	document.getElementById("Lobby").style.display = "none";
+	document.getElementById("LoginForm").style.display = "none";
+	document.getElementById("CustomCards").style.display = "block";
+}	
+
+//Executes when user clicks Add New Card. Adds the input to cardsToAdd array and displays card to user
+function addNewCardButton() {
+	var cardInput = document.getElementById('cardInbox').value;
+	cardsToAdd.push(cardInput);
+	displayCards();
+	resetCardInputScreen();	
+}
+
+function displayCards() {
+	let k = "";
+	for(let i = 0; i < cardsToAdd.length; i++) {
+		//Doesn't need to be a button, just using for styling for now
+		k += '<button id="card-CSS">' + cardsToAdd[i] +'</button>';
+	}
+	document.getElementById('displayCardsEntered').innerHTML = k;
+}
+
+function resetCardInputScreen() {
+	//Increment card number
+	document.getElementById("cardInputNumber").innerHTML = "Card " + ++cardNum;
+	//Clear input box
+	document.getElementById("cardInbox").value = "";
+}
+
+//When user clicks Finish, the array of new user cards will send to server and call initGame()
+var emitNewCards = function() {
+	socket.emit("newUserCards",cardsToAdd);
+	initGame();
+}
+
 
 /* ---------- Game Start --------- */
 function initGame() {
