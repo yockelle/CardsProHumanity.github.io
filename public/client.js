@@ -73,13 +73,8 @@ socket.on('Online_Players_List', function (data, num_players_g1) {
 	k += '</ul>';
 	document.getElementById('PlayerList').innerHTML = k;
 
-
-	
 	let num_g1 = ('<p id="num_players_g1">Current Players: ' + num_players_g1 + '</p>');
 	document.getElementById("num_players_g1").innerHTML = num_g1;
-
-
-
 });
 
 
@@ -133,23 +128,23 @@ function initGame() {
 	socket.emit("initGame", true);
 }
 
-// game start listenining - hiding appropriate divs
-socket.on('game_start', function (playerHands) {
-
-	console.log("Game has started");
-	
-	// Turn off lobby and login form div
-	document.getElementById("Lobby").style.display = "none";
-	document.getElementById("LoginForm").style.display = "none";
-	
-	// Turn on  Game div
-	document.getElementById("Game").style.display = "block";
-	document.getElementById("PlayerHand").style.display = "block";
-	document.getElementById("usersInGame").style.display = "block";
-
+// game start listening - hiding appropriate divs
+socket.on('game_start', function (playerHands, message) {
+	if (playerHands) {
+		console.log(message);
+		
+		// Turn off lobby and login form div
+		document.getElementById("Lobby").style.display = "none";
+		document.getElementById("LoginForm").style.display = "none";
+		
+		// Turn on  Game div
+		document.getElementById("Game").style.display = "block";
+		document.getElementById("PlayerHand").style.display = "block";
+		document.getElementById("usersInGame").style.display = "block";		
+	} else {
+		alert(message);
+	}
 });
-
-
 
 
 /* ----------- GAME LOGIC functions ----------- */

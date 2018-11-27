@@ -7,7 +7,7 @@ module.exports = class Game {
 		
 		this.socket;
 
-		this.onlinePlayersList = {};
+		//this.onlinePlayersList = {}; //might not be needed
 
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
 		this.scores = {};
@@ -50,7 +50,7 @@ module.exports = class Game {
 		console.log("Adding " + player.username + " to the PlayersList.")
 		
 		this.PlayersList.push(player);
-		this.onlinePlayersList[socket_id] = username;
+		// this.onlinePlayersList[socket_id] = username; //might not be needed
 	}
 
 

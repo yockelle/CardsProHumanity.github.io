@@ -189,7 +189,7 @@ function newConnection(socket) {
 				console.log('Checking player ' + totalOnlinePlayers[socket.id] + " with PlayerList" + table.PlayersList[i].username);
 				if (totalOnlinePlayers[socket.id] == table.PlayersList[i].username) {
 					isFound = true;
-					break;	
+					break;
 				}
 			}
 			if (!isFound) {
@@ -205,7 +205,8 @@ function newConnection(socket) {
 
 	socket.on('initGame', function (canStart) {
 		if (canStart && table.getPlayerCount() >= 2) {
-			io.emit('game_start', true); // io.emit sends to ALL clients, socket.broadcast.emit sends to all but the sender
+			let message = "Game started!";
+			io.emit('game_start', true, message); // io.emit sends to ALL clients, socket.broadcast.emit sends to all but the sender
 			table.initGame();
 
 			console.log(table.PlayersList); 
@@ -219,7 +220,8 @@ function newConnection(socket) {
 
 			io.emit('updatePlayersInGame', table.PlayersList); 
 		} else {
-			console.log("Need to wait for more players.");
+			let message = "Game 1 needs at least 2 or more players!";
+			io.emit('game_start', false, message);
 		}
 	});
 
@@ -237,8 +239,6 @@ function newConnection(socket) {
 			
 			io.emit('cardPlayed', data);
 		};
-
-		
 	});
 
 
