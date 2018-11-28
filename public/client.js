@@ -43,6 +43,7 @@ socket.on('Registration_Status', function (data) {
 
 // Online_Players_list Listen
 socket.on('Online_Players_List', function (data, num_players_g1) {
+
 	/* <ul id="sortable">
 		<li>
 			<div class="media">
@@ -120,7 +121,6 @@ socket.on('Login_Status', function (data) {
 		user['socket_id'] = socket.id;
 		console.log("Succesful login: " + user['username'], user['socket_id']);
 	}
-
 });
 
 /* ---------- Game Start --------- */

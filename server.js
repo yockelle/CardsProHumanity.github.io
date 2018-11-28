@@ -116,8 +116,12 @@ function newConnection(socket) {
 
 	}); //end of "Register a new User"
 
+<<<<<<< HEAD
+	/* ---- TODO: Validate a login ---- */
+=======
 
 	/* ---------- User Login ----------*/
+>>>>>>> ba1e0c459183324e06f1e45df703c40b9e699317
 	socket.on("Login", function userData(user_data) {
 
 		let query = {
@@ -286,8 +290,13 @@ setInterval(() => {
 }, 1000);
 
 
+<<<<<<< HEAD
+// Start Server Listening
+
+=======
 
 /* ---------- Start Server Listening ---------- */
+>>>>>>> ba1e0c459183324e06f1e45df703c40b9e699317
 server.listen(app.get("port"), function () {
 	console.log("Server started on port %s", app.get("port"));
 });
