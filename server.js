@@ -116,12 +116,9 @@ function newConnection(socket) {
 
 	}); //end of "Register a new User"
 
-<<<<<<< HEAD
-	/* ---- TODO: Validate a login ---- */
-=======
+
 
 	/* ---------- User Login ----------*/
->>>>>>> ba1e0c459183324e06f1e45df703c40b9e699317
 	socket.on("Login", function userData(user_data) {
 
 		let query = {
@@ -193,6 +190,16 @@ function newConnection(socket) {
 		});
 		delete totalOnlinePlayers[socket.id];
 		console.log('Disconnection from: ' + socket.id, 'Current Online Players:', table.PlayersList);
+	});
+	
+	/* ------------------- Custom Cards----------------------- */
+	//Receives the array of new user cards from client and saves to a text file
+	socket.on('newUserCards', function(newPlayerCards) {
+		var fs = require('fs');
+		var file = fs.createWriteStream('array.txt');
+		file.on('error', function(err) { /* error handling !!!!!!!!!!!*/ });
+		newPlayerCards.forEach(function(v) { file.write(v + '\n'); });
+		file.end();
 	});
 
 	/* ---------- Game Start ---------- */
@@ -290,13 +297,8 @@ setInterval(() => {
 }, 1000);
 
 
-<<<<<<< HEAD
-// Start Server Listening
-
-=======
 
 /* ---------- Start Server Listening ---------- */
->>>>>>> ba1e0c459183324e06f1e45df703c40b9e699317
 server.listen(app.get("port"), function () {
 	console.log("Server started on port %s", app.get("port"));
 });

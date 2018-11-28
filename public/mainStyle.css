@@ -16,6 +16,10 @@ html, body {
     height: 100%;
 }
 
+#CustomCards {
+    display: none;
+}
+
 #PlayerHand {
     display: none;
 }
