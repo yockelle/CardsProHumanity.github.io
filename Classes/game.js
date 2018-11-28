@@ -7,7 +7,7 @@ module.exports = class Game {
 		
 		this.socket;
 
-		this.onlinePlayersList = {};
+		//this.onlinePlayersList = {}; //might not be needed
 
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
 		this.scores = {};
@@ -38,19 +38,38 @@ module.exports = class Game {
 		return count;
 	}
 
+	isPartofGame(totalOnlinePlayers, socket_id) {
+		let isFound = false;
+		for (var i = 0; i < this.getPlayerCount(); i++) {
+			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
+				isFound = true;
+				break;
+			}
+		}
+		return isFound;
+	}
+
+	addDisconnectedPlayer(totalOnlinePlayers, socket_id) {
+		for (var i = 0; i < this.getPlayerCount(); i++) {
+			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
+				this.PlayersList[i].socket_id = socket_id;
+				this.PlayersList[i].connection = true;
+				break;
+			}
+		}
+	}
+
 	setSocket(socket) {
 		this.socket = socket;
 	}
 
 
 	addPlayer(username, socket_id) {
-		
-
 		let player = new Player(username = username, socket_id = socket_id )
 		console.log("Adding " + player.username + " to the PlayersList.")
 		
 		this.PlayersList.push(player);
-		this.onlinePlayersList[socket_id] = username;
+		// this.onlinePlayersList[socket_id] = username; //might not be needed
 	}
 
 

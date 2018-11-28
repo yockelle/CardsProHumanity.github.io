@@ -14,6 +14,8 @@ const app = express();
 var server = http.Server(app);
 const io = socketIO(server);
 var table = new Game();
+var totalOnlinePlayers = {};   // {socket.id:username}
+var tableOneConnectStatus = 0; // arbitrary counter for number of users connected to game 1
 
 app.set("port", PORT); // 8000 as default
 
@@ -39,9 +41,6 @@ const url = 'mongodb://teamemoji:emoji1234@ds163013.mlab.com:63013/cardsagainsth
 
 
 /* ---------- Socket.IO Code ---------- */
-
-
-
 io.on('connection', newConnection); 
 
 function newConnection(socket) {
@@ -152,16 +151,22 @@ function newConnection(socket) {
 				if (err) {
 					console.log('Database has some querying error');
 					result = {success:false,message:"Database Error. Please try again Later", username: user_data.username};
-				
-				} else if (dbResult.length) { // Found matching username/password combo 
+				}
+				// Found matching username/password combo 
+				else if (dbResult.length) {
 					console.log("Username and Password Matches!. User is authenticated");
 					result = {success:true,message:"User login Sucess!",username: user_data.username};
-					
-					// Add new player to the table
-					table.addPlayer(username = user_data.username, socket_id = socket.id);
-					
-				} else {
-					// Username and and password does not match
+					totalOnlinePlayers[socket.id] = user_data.username;
+					console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
+
+					// If #connected != #player objects in game1 and player username is part of game, reconnect player
+					if (tableOneConnectStatus != table.getPlayerCount() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
+						io.to(socket.id).emit('Disconnected_Player');
+						table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
+					}
+				}
+				// Username and and password does not match
+				else {
 					console.log("Invalid username or password");
 					result = {success:false,message:"Invalid username or password", username: user_data.username};
 				}
@@ -175,14 +180,15 @@ function newConnection(socket) {
 	});
 
 	socket.on('disconnect', () => {
-		
 		// Handle disconnected players
 		table.PlayersList.find( (element) => {
 			if (element.socket_id === socket.id) {
 				element.connect = false;
+				tableOneConnectStatus -= 1;
+				console.log("Game 1 has " + tableOneConnectStatus + " connected players.")
 			}
 		});
-
+		delete totalOnlinePlayers[socket.id];
 		console.log('Disconnection from: ' + socket.id, 'Current Online Players:', table.PlayersList);
 	});
 	
@@ -197,24 +203,72 @@ function newConnection(socket) {
 	});
 
 	/* ---------- Game Start ---------- */
+	socket.on('joinGameOne', function() {
+		// If players < 2 and player not in game, add player
+		if (table.getPlayerCount() < 2 && !table.isPartofGame(totalOnlinePlayers, socket.id)) {
+			console.log("Adding new player!");
+			table.addPlayer(username = totalOnlinePlayers[socket.id], socket_id = socket.id);
+			tableOneConnectStatus += 1;
+			console.log("Game 1 has " + tableOneConnectStatus + " connected players.")
+		} 
+		// If player is already part of game
+		else if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
+			console.log("Player is already part of game.");
+		}
+		// Show game is full only to person not in game
+		else {
+			if (!table.isPartofGame(totalOnlinePlayers, socket.id)) {
+				console.log("Game is full.");
+				let message = "Game is full.";
+				io.to(socket.id).emit('game_start', false, message);
+			}
+		}
+	});
 
 	socket.on('initGame', function (canStart) {
-		if (canStart) {
-			io.emit('game_start', true); // io.emit sends to ALL clients, socket.broadcast.emit sends to all but the sender
-			table.initGame();
+		if (canStart && table.getPlayerCount() >= 2) {
+			// Only players part of game can press start
+			if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
 
-			console.log(table.PlayersList); 
-			// Send player's hands to each socket
-			for (let i = 0; i < table.PlayersList.length; i++) {
-				let player = table.PlayersList[i];
+				table.initGame();
+				// Send player's hands to each socket
+				for (let i = 0; i < table.getPlayerCount(); i++) {
+					let message = "Game started!";
+					let player = table.PlayersList[i];
+
+					io.to(player.socket_id).emit('game_start', true, message); // io.to(player.socket_id).emit to all players in game using for loop
+					
+					console.log("emitting to ", player.username, player.socket_id);
+					io.to(player.socket_id).emit('updateHand', player.hand);
+					io.to(player.socket_id).emit('updatePlayersInGame', table.PlayersList);
+				}
+				console.log(table.PlayersList);
+
+			} else {
+				let message = "You cannot start a game you are not part of!";
+				io.to(socket.id).emit('game_start', false, message);
+			}
+		} else {
+			let message = "Game 1 needs at least 2 or more players!";
+			io.to(socket.id).emit('game_start', false, message);
+		}
+	});
+
+	socket.on('continueGame', function () {
+		let message = "Player is continuing game.";
+
+		for (let i = 0; i < table.getPlayerCount(); i++) {
+			let player = table.PlayersList[i];
+			if (totalOnlinePlayers[socket.id] == player.username) {
+				io.to(player.socket_id).emit('game_start', true, message); // io.to(player.socket_id).emit to all players in game using for loop
 
 				console.log("emitting to ", player.username, player.socket_id);
 				io.to(player.socket_id).emit('updateHand', player.hand);
+				io.to(player.socket_id).emit('updatePlayersInGame', table.PlayersList);
+				break;
 			}
-
-			io.emit('updatePlayersInGame', table.PlayersList); 
 		}
-
+		console.log(table.PlayersList);
 	});
 
 	/* ---------- Board (cards) function ---------- */
@@ -231,17 +285,16 @@ function newConnection(socket) {
 			
 			io.emit('cardPlayed', data);
 		};
-
-		
 	});
 
 
 }; //end of newConnection socket function
 
-//send list of online players to client ever second.
+//send list of online players to client every second.
 setInterval(() => {
-    io.emit('Online_Players_List', table.onlinePlayersList);
-}, 100);
+	// Emit All online players, # players joined game 1
+	io.emit('Online_Players_List', totalOnlinePlayers, table.getPlayerCount());
+}, 1000);
 
 
 

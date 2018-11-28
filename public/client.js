@@ -42,9 +42,8 @@ socket.on('Registration_Status', function (data) {
 });
 
 // Online_Players_list Listen
-socket.on('Online_Players_List', function (data) {
+socket.on('Online_Players_List', function (data, num_players_g1) {
 
-//HTML TEMPLATE
 	/* <ul id="sortable">
 		<li>
 			<div class="media">
@@ -58,7 +57,6 @@ socket.on('Online_Players_List', function (data) {
 			</div>
 		</li>
 	</ul> */
-
 	let k = ('<ul id="sortable">');
 	for (key in data) {
 		console.log("Current Players:", "SocketID: ", key, "UserName: ", data[key])
@@ -73,13 +71,18 @@ socket.on('Online_Players_List', function (data) {
 		k += ('<p>SocketID: '+ key + '</p>');
 		k += ('</div></div></li>');
 	};
-
 	k += '</ul>';
 	document.getElementById('PlayerList').innerHTML = k;
 
-
+	let num_g1 = ('<p id="num_players_g1">Current Players: ' + num_players_g1 + '</p>');
+	document.getElementById("num_players_g1").innerHTML = num_g1;
 });
 
+socket.on('Disconnected_Player', function() {
+		let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="continueGame()">Continue</a>');
+		document.getElementById("join_g1").innerHTML = html;
+		document.getElementById("start_g1").style.display = "none";
+})
 
 /* ----------- User Login ----------- */
 function userLogin() {
@@ -161,30 +164,37 @@ var emitNewCards = function() {
 	initGame();
 }
 
-
 /* ---------- Game Start --------- */
+function joinGameOne() {
+	socket.emit("joinGameOne");
+}
+
 function initGame() {
 	// Emitted upon 'Start' button click
 	socket.emit("initGame", true);
 }
 
-// game start listenining - hiding appropriate divs
-socket.on('game_start', function (playerHands) {
+function continueGame() {
+	socket.emit("continueGame");
+}
 
-	console.log("Game has started");
-	
-	// Turn off lobby and login form div
-	document.getElementById("Lobby").style.display = "none";
-	document.getElementById("LoginForm").style.display = "none";
-	
-	// Turn on  Game div
-	document.getElementById("Game").style.display = "block";
-	document.getElementById("PlayerHand").style.display = "block";
-	document.getElementById("usersInGame").style.display = "block";
-
+// game start listening - hiding appropriate divs
+socket.on('game_start', function (playerHands, message) {
+	if (playerHands) {
+		console.log(message);
+		
+		// Turn off lobby and login form div
+		document.getElementById("Lobby").style.display = "none";
+		document.getElementById("LoginForm").style.display = "none";
+		
+		// Turn on  Game div
+		document.getElementById("Game").style.display = "block";
+		document.getElementById("PlayerHand").style.display = "block";
+		document.getElementById("usersInGame").style.display = "block";
+	} else {
+		alert(message);
+	}
 });
-
-
 
 
 /* ----------- GAME LOGIC functions ----------- */
