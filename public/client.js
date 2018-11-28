@@ -77,6 +77,11 @@ socket.on('Online_Players_List', function (data, num_players_g1) {
 	document.getElementById("num_players_g1").innerHTML = num_g1;
 });
 
+socket.on('Disconnected_Player', function() {
+		let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="continueGame()">Continue</a>');
+		document.getElementById("join_g1").innerHTML = html;
+		document.getElementById("start_g1").style.display = "none";
+})
 
 /* ----------- User Login ----------- */
 function userLogin() {
@@ -128,6 +133,10 @@ function initGame() {
 	socket.emit("initGame", true);
 }
 
+function continueGame() {
+	socket.emit("continueGame");
+}
+
 // game start listening - hiding appropriate divs
 socket.on('game_start', function (playerHands, message) {
 	if (playerHands) {
@@ -140,7 +149,7 @@ socket.on('game_start', function (playerHands, message) {
 		// Turn on  Game div
 		document.getElementById("Game").style.display = "block";
 		document.getElementById("PlayerHand").style.display = "block";
-		document.getElementById("usersInGame").style.display = "block";		
+		document.getElementById("usersInGame").style.display = "block";
 	} else {
 		alert(message);
 	}

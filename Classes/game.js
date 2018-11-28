@@ -49,7 +49,15 @@ module.exports = class Game {
 		return isFound;
 	}
 
-
+	addDisconnectedPlayer(totalOnlinePlayers, socket_id) {
+		for (var i = 0; i < this.getPlayerCount(); i++) {
+			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
+				this.PlayersList[i].socket_id = socket_id;
+				this.PlayersList[i].connection = true;
+				break;
+			}
+		}
+	}
 
 	setSocket(socket) {
 		this.socket = socket;
@@ -57,8 +65,6 @@ module.exports = class Game {
 
 
 	addPlayer(username, socket_id) {
-		
-
 		let player = new Player(username = username, socket_id = socket_id )
 		console.log("Adding " + player.username + " to the PlayersList.")
 		
