@@ -4,10 +4,11 @@ const Deck = require('./Deck');
 module.exports = class Game {
 
 	constructor() { 
-		
-		this.socket;
 
-		//this.onlinePlayersList = {}; //might not be needed
+		const WINNING_SCORE = 10; // Note: Javascript ES6 doesn't have class variables 
+		
+		this.connectedPlayers = 0;
+		this.numPlayersReady = [];
 
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
 		this.scores = {};
@@ -17,7 +18,9 @@ module.exports = class Game {
 		this.PromptDeck = new Deck('Prompt');
 		
 		this.promptCard;
-		this.judgeHand = [];
+		this.judgeHand = []; // Array { card_owner, card }
+
+		this.judgeidx = 0; // index of the current judge
 
 	}
 
@@ -26,21 +29,13 @@ module.exports = class Game {
 		return this.PlayersList.length;
 	}
 
-	getConnectedCount() {
-		// returns amount of connected players
-		let count = 0;
-		for (let i = 0; i < this.getPlayerCount(); i ++){
-			if (this.PlayersList[i].connection) {
-				count++;
-			}
-		}
-
-		return count;
+	getJudgePlayer() {
+		// Gets player object of the judge
+		return this.PlayersList[this.judgeidx]
 	}
-
 	isPartofGame(totalOnlinePlayers, socket_id) {
 		let isFound = false;
-		for (var i = 0; i < this.getPlayerCount(); i++) {
+		for (let i = 0; i < this.getPlayerCount(); i++) {
 			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
 				isFound = true;
 				break;
@@ -49,8 +44,22 @@ module.exports = class Game {
 		return isFound;
 	}
 
+	isJudge(username) {
+
+		for (let i = 0; i < this.getPlayerCount(); i++ ) {
+			let player = this.PlayersList[i];
+			if (player.username === username) {
+				return player.judge;
+			}
+		}
+
+		throw username + " ain't a valid username in the PlayersList! ";
+
+	}
+
+
 	addDisconnectedPlayer(totalOnlinePlayers, socket_id) {
-		for (var i = 0; i < this.getPlayerCount(); i++) {
+		for (let i = 0; i < this.getPlayerCount(); i++) {
 			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
 				this.PlayersList[i].socket_id = socket_id;
 				this.PlayersList[i].connection = true;
@@ -69,9 +78,7 @@ module.exports = class Game {
 		console.log("Adding " + player.username + " to the PlayersList.")
 		
 		this.PlayersList.push(player);
-		// this.onlinePlayersList[socket_id] = username; //might not be needed
 	}
-
 
 	initGame(n = 5) {
 
@@ -87,8 +94,24 @@ module.exports = class Game {
 			let key = this.PlayersList[i].username
 			this.scores[key] = 0;
 		}
+		// set First player in the list as the initial judge
+		this.PlayersList[0].judge  = true;
 
+	}
 
+	newJudge() {
+		// rotates to next judge
+		this.PlayersList[this.idx++] = false;
+		this.idx %= this.getPlayerCount;
+		this.PlayersList[this.idx];
+	}
+
+	updateScores(username) {
+		this.scores[username] += 1;
+		if (this.scores[username] == WINNING_SCORE) {
+			// WIP
+			continue;
+		}
 	}
 
 	dealPromptCard() {
@@ -107,6 +130,7 @@ module.exports = class Game {
 				player_index = i;
 			}
 		}
+
 		if (player_index === null) {
 			throw player + " could not be found in the table. Please see cardPlayed() func in game.js"
 		}
@@ -125,10 +149,14 @@ module.exports = class Game {
         this.tableCards = {};
     }
 
-	endRound(data) {
+	endRound(winner) {
+		// this is called when judge plays a card 
+		this.played = [] 
+		this.judgeHand = []
+		this.dealPromptCard();
+		this.newJudge();
 
 	}
-
 
 }
 

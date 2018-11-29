@@ -86,3 +86,7 @@ html, body {
     height: 134px;  
     width: 104px;
 }
+
+#ResetGame {
+    float: right;
+}

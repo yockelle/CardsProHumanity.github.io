@@ -1,10 +1,13 @@
 var PORT = process.env.PORT || 8000;
+var dev = true;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
-var http = require("http");
-var socketIO = require('socket.io');
-var mongodb = require('mongodb');
+const http = require("http");
+const socketIO = require('socket.io');
+const mongodb = require('mongodb');
+const fs = require('fs'); 
+
 
 /*---------- Game Logic Dependencies ---------- */
 const Game = require('./Classes/game');
@@ -20,19 +23,18 @@ var tableOneConnectStatus = 0; // arbitrary counter for number of users connecte
 app.set("port", PORT); // 8000 as default
 
 
-/* ---------- Dynamic Pages  ---------- */
-app.set('view engine', 'ejs');
+/* ---------- HTML PAGE  ---------- */
+/* app.set('view engine', 'ejs');
 app.use('/public', express.static(__dirname + "/public")); // this lets us know that all our public files are in that directory
 
-app.get(['/', 'index.html'], (request, response) => {
-	response.render(__dirname + '/views/index.ejs', {
-		username: "pointless",
-		userhand: [" Fake Text", " blah", "oogly", "merry", "christmas"], 
-		promptCard: "pointless",
-		playercount: 0
-	});
-});
 
+app.get(['/', 'index.html'], (request, response) => {
+	response.sendFile('index.html', __dirname, + '/public');
+});
+*/
+
+app.use('/public', express.static(__dirname + "/public"));
+app.use(express.static("public"));
 
 /* ---------- Mongo Code ---------- */
 // set mongo client - our mlab account
@@ -132,6 +134,25 @@ function newConnection(socket) {
 			username: "empty user"
 		}; 
 	
+		// Developer mode to bypass mongoDB
+		if (dev) {
+			result.success = true;
+			result.message = "Entering as Admin";
+			result.username = user_data.username;
+
+			totalOnlinePlayers[socket.id] = user_data.username;
+			console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
+			if (tableOneConnectStatus != table.getPlayerCount() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
+				io.to(socket.id).emit('Disconnected_Player');
+				table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
+			}
+
+			socket.emit('Login_Status', result);
+			return; // 'break' the function 
+		}
+
+		console.log("attempting mongoclient connection");
+
 		// Connection and error handling
 		mongoClient.connect(url, {
 			useNewUrlParser: true
@@ -195,7 +216,6 @@ function newConnection(socket) {
 	/* ------------------- Custom Cards----------------------- */
 	//Receives the array of new user cards from client and saves to a text file
 	socket.on('newUserCards', function(newPlayerCards) {
-		var fs = require('fs');
 		var file = fs.createWriteStream('array.txt');
 		file.on('error', function(err) { /* error handling !!!!!!!!!!!*/ });
 		newPlayerCards.forEach(function(v) { file.write(v + '\n'); });
@@ -271,21 +291,43 @@ function newConnection(socket) {
 		console.log(table.PlayersList);
 	});
 
-	/* ---------- Board (cards) function ---------- */
+	/* ---------- GAME PLAY FUNCTIONS  ---------- */
 	socket.on('cardPlayed', function broadcastCard(data) {
 		// Receives card being played by player. 
 		console.log('Received card at index:  ' + data.card_idx + ' from: ' + data.username);
 		
-		// Only allow players that haven't played a card yet to play
-		if (!table.played.includes(data.username)) {	
+
+		// Only allow players that haven't played a card yet to play or is not a judge
+		if (!table.played.includes(data.username) && !table.isJudge(data.username)) {	
 			
-			console.log("Successfully playing card from" + data.username + data.card_idx);
+			console.log("Successfully playing card from: " + data.username + " " + data.card_idx);
 			table.played.push(data.username);
 			table.cardPlayed(data.card_idx, data.username);
 			
 			io.emit('cardPlayed', data);
+
+			// If everyone has played a card, it's time for the judge to judge
+			let everyoneHasPlayed = (table.played.length === table.getPlayerCount() - 1);
+			console.log("has everyone played: " + everyoneHasPlayed, table.played.length, table.getPlayerCount());
+
+			if (everyoneHasPlayed) {
+				console.log(" Everyone has played, emitting the judgehand for all to see" 
+					+ table.judgeHand);
+
+
+				let judge = table.getJudgePlayer();
+				// Send the hand and the entier judge player object to client
+				io.emit('judgingTime', table.judgeHand, judge);
+			} 
+		} else {
+			console.log("Card rejected from: " + data.username + " " + data.card_idx);
 		};
 	});
+
+	// Receiving a card that the judge has selected
+	socket.on('judgeSelection', function judgeSelected(data) {
+		console.log("The judge has s")
+	})
 
 
 }; //end of newConnection socket function

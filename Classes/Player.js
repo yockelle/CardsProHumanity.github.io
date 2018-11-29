@@ -1,5 +1,6 @@
 
 module.exports = class Player {
+   
     constructor(username,socket_id) {
         
         // Log in information
@@ -17,7 +18,7 @@ module.exports = class Player {
     drawCards(deck, number) {
     	// draws number of cards from the Deck to player's hand:
     	for (let i = 0; i < number; i++){
-    		this.hand.push(deck.drawCard());
+    		this.hand.push(deck.drawCard(this.username));
     	}
     }
 
@@ -26,6 +27,8 @@ module.exports = class Player {
    		if (index >=  this.hand.length) {
    			throw "IndexError: The index:" + index + " is out of bounds! " ;
    		}
+      // *TODO*  don't draw card until after round ends
+      // return this.hand.splice(index,1) 
    		return this.hand.splice(index,1, deck.drawCard());
    	}
 

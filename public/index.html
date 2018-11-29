@@ -118,7 +118,7 @@
 		<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>
 		<button class="button" onclick="addNewCardButton()">Add New Card</button><br>
 		<div id="displayCardsEntered"></div><br>
-		<button class="button" onclick="emitNewCards()">Finished</button><br>
+		<button id="send_cards" onclick="emitNewCards()">Finished</button><br>
 	</div>
 
 	<!-- GAME -->
@@ -131,14 +131,12 @@
 			<div class="card">
 			<img src="/public/CAH_Logo.png" alt="Avatar" style="width:50%">
 			<div class="container">
-					<h4><b>
-							
-							<%= promptCard["cardid"]%>
-							<%= promptCard["cardValue"]%>
-						
-					</b></h4>
 			</div>
 			</div>
+		</div>
+
+		<div id="ResetGame">
+			<button type="button" class="btn btn-danger" onclick="resetGame()">Reset Game!</button>
 		</div>
 
 		<div id="usersInGame">
