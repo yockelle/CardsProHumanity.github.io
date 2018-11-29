@@ -14,7 +14,9 @@ var user = {
 
 /* ---------- User Registration ---------- */
 function userRegister() {
+
 	console.log('Sending Registration Data to Server');
+
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
 
@@ -33,6 +35,7 @@ function userRegister() {
 
 		alert("Username and/Or Password Cannot be blank!")
 	}
+
 } // end of userRegister
 
 // Registration Listen
