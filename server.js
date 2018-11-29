@@ -15,7 +15,6 @@ var server = http.Server(app);
 const io = socketIO(server);
 var table = new Game();
 var totalOnlinePlayers = {};   // {socket.id:username}
-var tableOneConnectStatus = 0; // arbitrary counter for number of users connected to game 1
 
 app.set("port", PORT); // 8000 as default
 
@@ -160,7 +159,7 @@ function newConnection(socket) {
 					console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
 
 					// If #connected != #player objects in game1 and player username is part of game, reconnect player
-					if (tableOneConnectStatus != table.getPlayerCount() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
+					if (table.connectedPlayers != table.getPlayerCount() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
 						io.to(socket.id).emit('Disconnected_Player');
 						table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
 					}
@@ -184,8 +183,8 @@ function newConnection(socket) {
 		table.PlayersList.find( (element) => {
 			if (element.socket_id === socket.id) {
 				element.connect = false;
-				tableOneConnectStatus -= 1;
-				console.log("Game 1 has " + tableOneConnectStatus + " connected players.")
+				table.connectedPlayers -= 1;
+				console.log("Game 1 has " + table.connectedPlayers + " connected players.")
 			}
 		});
 		delete totalOnlinePlayers[socket.id];
@@ -208,8 +207,8 @@ function newConnection(socket) {
 		if (table.getPlayerCount() < 2 && !table.isPartofGame(totalOnlinePlayers, socket.id)) {
 			console.log("Adding new player!");
 			table.addPlayer(username = totalOnlinePlayers[socket.id], socket_id = socket.id);
-			tableOneConnectStatus += 1;
-			console.log("Game 1 has " + tableOneConnectStatus + " connected players.")
+			table.connectedPlayers += 1;
+			console.log("Game 1 has " + table.connectedPlayers + " connected players.")
 		} 
 		// If player is already part of game
 		else if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
