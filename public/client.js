@@ -123,16 +123,38 @@ socket.on('Login_Status', function (data) {
 	}
 });
 
+
+
+/* ---------- Game Start --------- */
+function joinGameOne() {
+	socket.emit("joinGameOne");
+}
+
+function initGame() {
+	// Emitted upon 'Start' button click
+	socket.emit("initGame", true);
+}
+
+function continueGame() {
+	socket.emit("continueGame");
+}
+
+socket.on('customCards', function (status, message) {
+	if (status) {
+		console.log(message);
+
+		// Go to custom card screen.
+		document.getElementById("Lobby").style.display = "none";
+		document.getElementById("LoginForm").style.display = "none";
+		document.getElementById("CustomCards").style.display = "block";
+	} else {
+		console.log('error not received.');
+	}
+});
+
 /*-----------Create custom cards--------*/
 var cardNum = 1; //Keeps track of new cards entered by user
 var cardsToAdd = []; //Array to hold new cards user enters
-
-//Turns off lobby and login divs and turns on CustomCard div
-function cardCreator() {
-	document.getElementById("Lobby").style.display = "none";
-	document.getElementById("LoginForm").style.display = "none";
-	document.getElementById("CustomCards").style.display = "block";
-}	
 
 //Executes when user clicks Add New Card. Adds the input to cardsToAdd array and displays card to user
 function addNewCardButton() {
@@ -160,34 +182,24 @@ function resetCardInputScreen() {
 
 //When user clicks Finish, the array of new user cards will send to server and call initGame()
 var emitNewCards = function() {
+	console.log("Sending cards to server.");
 	socket.emit("newUserCards",cardsToAdd);
-	initGame();
+
+
+	let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>')
+	document.getElementById("send_cards").outerHTML = html;
 }
 
-/* ---------- Game Start --------- */
-function joinGameOne() {
-	socket.emit("joinGameOne");
-}
-
-function initGame() {
-	// Emitted upon 'Start' button click
-	socket.emit("initGame", true);
-}
-
-function continueGame() {
-	socket.emit("continueGame");
-}
-
-// game start listening - hiding appropriate divs
+// Start the game
 socket.on('game_start', function (playerHands, message) {
 	if (playerHands) {
 		console.log(message);
-		
-		// Turn off lobby and login form div
+		// Turn off Custom Card div
 		document.getElementById("Lobby").style.display = "none";
 		document.getElementById("LoginForm").style.display = "none";
-		
-		// Turn on  Game div
+		document.getElementById("CustomCards").style.display = "none";
+
+		// Turn on Game div
 		document.getElementById("Game").style.display = "block";
 		document.getElementById("PlayerHand").style.display = "block";
 		document.getElementById("usersInGame").style.display = "block";

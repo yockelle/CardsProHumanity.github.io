@@ -9,6 +9,7 @@ module.exports = class Game {
 
 		//this.onlinePlayersList = {}; //might not be needed
 		this.connectedPlayers = 0;
+		this.numPlayersReady = []; // socket ids of players ready to start game
 
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
 		this.scores = {};

@@ -190,16 +190,6 @@ function newConnection(socket) {
 		delete totalOnlinePlayers[socket.id];
 		console.log('Disconnection from: ' + socket.id, 'Current Online Players:', table.PlayersList);
 	});
-	
-	/* ------------------- Custom Cards----------------------- */
-	//Receives the array of new user cards from client and saves to a text file
-	socket.on('newUserCards', function(newPlayerCards) {
-		var fs = require('fs');
-		var file = fs.createWriteStream('array.txt');
-		file.on('error', function(err) { /* error handling !!!!!!!!!!!*/ });
-		newPlayerCards.forEach(function(v) { file.write(v + '\n'); });
-		file.end();
-	});
 
 	/* ---------- Game Start ---------- */
 	socket.on('joinGameOne', function() {
@@ -224,25 +214,16 @@ function newConnection(socket) {
 		}
 	});
 
+	// Add custom cards first
 	socket.on('initGame', function (canStart) {
 		if (canStart && table.getPlayerCount() >= 2) {
 			// Only players part of game can press start
 			if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
-
-				table.initGame();
-				// Send player's hands to each socket
 				for (let i = 0; i < table.getPlayerCount(); i++) {
-					let message = "Game started!";
+					let message = "Start adding your own cards!";
 					let player = table.PlayersList[i];
-
-					io.to(player.socket_id).emit('game_start', true, message); // io.to(player.socket_id).emit to all players in game using for loop
-					
-					console.log("emitting to ", player.username, player.socket_id);
-					io.to(player.socket_id).emit('updateHand', player.hand);
-					io.to(player.socket_id).emit('updatePlayersInGame', table.PlayersList);
+					io.to(player.socket_id).emit('customCards', true, message);
 				}
-				console.log(table.PlayersList);
-
 			} else {
 				let message = "You cannot start a game you are not part of!";
 				io.to(socket.id).emit('game_start', false, message);
@@ -251,6 +232,39 @@ function newConnection(socket) {
 			let message = "Game 1 needs at least 2 or more players!";
 			io.to(socket.id).emit('game_start', false, message);
 		}
+	});
+
+	/* ------------------- Custom Cards----------------------- */
+	//Receives the array of new user cards from client and saves to a text file
+	socket.on('newUserCards', function(newPlayerCards) {
+		var fs = require('fs');
+		var file = fs.createWriteStream('array.txt');
+		file.on('error', function(err) { /* error handling !!!!!!!!!!!*/ });
+		newPlayerCards.forEach(function(v) { file.write(v + '\n'); });
+		file.end();
+
+		if (!(table.numPlayersReady.includes(socket.id))) {
+			table.numPlayersReady.push(socket.id);
+		}
+
+		if (table.numPlayersReady.length == table.getPlayerCount()) {
+			table.initGame();
+			// Send player's hands to each socket
+			for (let i = 0; i < table.getPlayerCount(); i++) {
+				let message = "Game started!";
+				let player = table.PlayersList[i];
+
+				io.to(player.socket_id).emit('game_start', true, message); // io.to(player.socket_id).emit to all players in game using for loop
+				
+				console.log("emitting to ", player.username, player.socket_id);
+				io.to(player.socket_id).emit('updateHand', player.hand);
+				io.to(player.socket_id).emit('updatePlayersInGame', table.PlayersList);
+			}
+			console.log(table.PlayersList);	
+		} else {
+			console.log("Waiting for players!!!");
+		}
+
 	});
 
 	socket.on('continueGame', function () {
