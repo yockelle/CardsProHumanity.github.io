@@ -99,10 +99,16 @@
 						</div>
 						<div id="start_g1" class="media-right align-self-center">
 							<a href="#" class="btn btn-default" onclick="initGame()">Start</a>
+						</div>
 
+
+<!-- 
 						<div class="media-right align-self-center">
 							<a href="#" class="btn btn-default" onclick="cardCreator()">Start</a>
-						</div>
+						</div> -->
+
+
+
 
 					</div>
 				</li>
@@ -118,8 +124,9 @@
 		<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>
 		<button class="button" onclick="addNewCardButton()">Add New Card</button><br>
 		<div id="displayCardsEntered"></div><br>
-		<button class="button" onclick="emitNewCards()">Finished</button><br>
+		<button id="send_cards" class="button" onclick="emitNewCards()">Finished</button><br>
 	</div>
+
 
 	<!-- GAME -->
 	<!--Default display is none, will show once player starts game-->
