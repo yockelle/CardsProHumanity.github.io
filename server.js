@@ -287,6 +287,25 @@ function newConnection(socket) {
 		};
 	});
 
+	/* ---------- User Pressed Reset Game Button. (Reset game and kick everyone back to lobby) ---------- */
+	socket.on('ResetGameButtonPressed', function () {
+
+		let user = totalOnlinePlayers[socket.id];
+		console.log('Resetting Game 1. Request sent by user:',user,'(',socket.id,')');
+
+		let playerList = table.PlayersList;
+
+		//For each player in the table, emit a message to tell client to reset game
+		for (let i = 0; i < playerList.length; i ++) {
+			let player = playerList[i];
+			io.to(player.socket_id).emit('reset_current_game',user);
+		}
+
+		//create a brand new table object to replace the old table
+		table = new Game();
+
+	});
+
 
 }; //end of newConnection socket function
 

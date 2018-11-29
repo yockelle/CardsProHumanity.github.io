@@ -258,6 +258,24 @@ socket.on('cardPlayed', function cardPlayed(data) {
 
 });
 
+/* ------ Resetting Game - Moving Everyone Back to Lobby and Resetting Game ----- */ 
+socket.on('reset_current_game', function resetgame(user) {
+
+	console.log("Resetting Game");
+	alert('Game Reset Initialized by User: ' + user);
+
+	// Turn on lobby div
+	document.getElementById("Lobby").style.display = "block";
+	
+	// Turn off  Game div
+	document.getElementById("Game").style.display = "none";
+	document.getElementById("PlayerHand").style.display = "none";
+	document.getElementById("usersInGame").style.display = "none";
+
+});
+
+
+
 function sendCard(card_idx) {
 
 	// Sends card_played
@@ -271,4 +289,10 @@ function sendCard(card_idx) {
 	console.log('Sending the card ' + data.card_id + ' to Server');
 	socket.emit('cardPlayed', data);
 
+}
+
+//Activates when user pressed the reset game button in the game div
+function resetGame() {
+	console.log("Resetting Game Button Pressed. Sending Request to Server");
+	socket.emit('ResetGameButtonPressed') //sending request to server to reset game
 }
