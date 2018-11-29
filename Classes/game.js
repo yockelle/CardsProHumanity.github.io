@@ -4,8 +4,6 @@ const Deck = require('./Deck');
 module.exports = class Game {
 
 	constructor() { 
-
-		const WINNING_SCORE = 10; // Note: Javascript ES6 doesn't have class variables 
 		
 		this.connectedPlayers = 0;
 		this.numPlayersReady = [];
@@ -18,7 +16,7 @@ module.exports = class Game {
 		this.PromptDeck = new Deck('Prompt');
 		
 		this.promptCard;
-		this.judgeHand = []; // Array { card_owner, card }
+		this.judgeHand = []; // Array of Cards
 
 		this.judgeidx = 0; // index of the current judge
 
@@ -33,6 +31,19 @@ module.exports = class Game {
 		// Gets player object of the judge
 		return this.PlayersList[this.judgeidx]
 	}
+
+	getPlayer(username) {
+		// Returns the playerobject 
+		for (let i = 0; i < this.getPlayerCoount(); i++) {
+			if (username == this.PlayersList[i].username) {
+				return this.PlayersList[i];
+			}
+		}
+		throw username + " is not a current user in the game! ";
+
+	}
+
+	/* Membership checks */
 	isPartofGame(totalOnlinePlayers, socket_id) {
 		let isFound = false;
 		for (let i = 0; i < this.getPlayerCount(); i++) {
@@ -57,7 +68,7 @@ module.exports = class Game {
 
 	}
 
-
+	/* Player Adjustments */
 	addDisconnectedPlayer(totalOnlinePlayers, socket_id) {
 		for (let i = 0; i < this.getPlayerCount(); i++) {
 			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
@@ -68,14 +79,10 @@ module.exports = class Game {
 		}
 	}
 
-	setSocket(socket) {
-		this.socket = socket;
-	}
-
 
 	addPlayer(username, socket_id) {
 		let player = new Player(username = username, socket_id = socket_id )
-		console.log("Adding " + player.username + " to the PlayersList.")
+		// console.log("Adding " + player.username + " to the PlayersList.")
 		
 		this.PlayersList.push(player);
 	}
@@ -106,12 +113,17 @@ module.exports = class Game {
 		this.PlayersList[this.idx];
 	}
 
-	updateScores(username) {
+	// private (to be used bo endRound() only )
+	_updateScores(username) { 
+		// updates Scores & also returns boolean whether anyone has won
 		this.scores[username] += 1;
-		if (this.scores[username] == WINNING_SCORE) {
-			// WIP
-			continue;
-		}
+	}
+
+	reachedMaxScore(username) {
+		// returns boolean whether username is winner
+		const WINNING_SCORE = 10; // ES6 doesn't have class variables yet - this is temporary
+
+		return this.scores[username] === WINNING_SCORE;
 	}
 
 	dealPromptCard() {
@@ -121,11 +133,9 @@ module.exports = class Game {
 	cardPlayed(card_idx, player) {
 		
 		let player_index = null;
-		// Iterate through entier PlayersList to get the index of player
+		// Iterate through entire PlayersList to get the index of player
 		for (let i = 0; i < this.PlayersList.length; i++) {
-			
-			console.log(this.PlayersList[i].username);
-			
+						
 			if (player === this.PlayersList[i].username) {
 				player_index = i;
 			}
@@ -135,7 +145,10 @@ module.exports = class Game {
 			throw player + " could not be found in the table. Please see cardPlayed() func in game.js"
 		}
 
-		let played_card = this.PlayersList[player_index].playCard(card_idx, this.PlayerDeck);
+		let card_player = this.PlayersList[player_index] // The player object who played the card
+		let played_card = card_player.playCard(card_idx, this.PlayerDeck);
+		
+		console.log("Played card is: " , played_card);
 		this.judgeHand.push(played_card);
 
 	}
@@ -156,6 +169,16 @@ module.exports = class Game {
 		this.dealPromptCard();
 		this.newJudge();
 
+		// update Score of winner and check if they reached the max (won the game)
+		this._updateScores(winner)
+		if (this.reachedMaxScore(winner)) { // if there is a winner
+			this.endGame(winner);
+		}
+	}
+
+	endGame(winner) {
+		resetTable();
+		console.log(`${winner} is the winner of the game!`);
 	}
 
 }

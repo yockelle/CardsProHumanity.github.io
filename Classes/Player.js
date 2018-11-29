@@ -29,7 +29,7 @@ module.exports = class Player {
    		}
       // *TODO*  don't draw card until after round ends
       // return this.hand.splice(index,1) 
-   		return this.hand.splice(index,1, deck.drawCard());
+   		return this.hand.splice(index,1, deck.drawCard())[0];
    	}
 
    	toString() {

@@ -54,6 +54,7 @@ module.exports = class Deck {
     }
 
     drawCard(owner) {
+       
         let randomIndex = Math.floor(Math.random()*this.cards.length);
         let card = this.cards.splice(randomIndex, 1)[0]
         card.setOwner(owner); 

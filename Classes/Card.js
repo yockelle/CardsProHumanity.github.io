@@ -7,6 +7,11 @@ module.exports = class Card {
         this.owner = "null" ; // owner of the card. null for part of the deck
 	}
 	
+	/* Getters and Setters */
+
+	getOwner() {
+		return this.owner;
+	}
 	setOwner(owner) {
 		this.owner = owner;
 	}

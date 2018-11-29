@@ -25,7 +25,7 @@ html, body {
 }
 
 #PromptCard {
-    display: none;
+    display: block;
 }
 
 #JudgeSelect {

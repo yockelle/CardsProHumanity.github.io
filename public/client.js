@@ -3,15 +3,17 @@
 /* -------- Global Variables for the client  ----------- */
 var socket = io();
 
-var user = {
+var client = {
 	username: "null",
 	socket_id: "null"
 }
 
 
 /* --------------------------------------- Button-click functions  ------------------------------------------------- */
+// We could make a seperate file for this called button.js and pass in socket as a paramater
 function userRegister() {
 	// Emitted on 'Register' button click
+	
 	console.log('Sending Registration Data to Server');
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
@@ -34,7 +36,8 @@ function userRegister() {
 }; 
 function userLogin() {
 	// Emitted on 'Login' button click
-	// console.log('Sending user login info to server');
+	
+	console.log('Sending user login info to server');
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
 
@@ -70,21 +73,18 @@ function continueGame() {
 	socket.emit("continueGame");
 }
 // TODO
-function sendCard(card_idx, type) { 
-	// Emited upon clicking a card 
+function sendCard(card_idx, option) { 
+	// Emited upon clicking a card . option paramter should be either 'candidate' or 'judge'
 	var data = {
 		card_idx: card_idx,
-		username: user.username,
-		socket_id: user.socket_id
+		username: client.username, // username will keep track of who sent the card 
+		socket_id: client.socket_id
 	}
 
-	console.log('Sending the card ' + data.card_id + ' to Server');
-	if (type == 'candidate' ) {
-		socket.emit('cardPlayed', data);
-	} else if (type == 'winner') {
-		socket.emit('winnerSelected', data);
-	}
+	console.log('Sending the card ' + data.card_idx + ' to Server from ' + data.username, data.socket_id);
 
+	socket.emit('cardPlayed', data, option);
+	
 }
 function resetGame() {
 	// Emited on 'Reset' button click
@@ -93,8 +93,8 @@ function resetGame() {
 }
 
 /* ------------------------------------ Card Creation Functions ------------------------------------ */
-var cardNum = 1; //Keeps track of new cards entered by user
-var cardsToAdd = []; //Array to hold new cards user enters
+var cardNum = 1; // Keeps track of new cards entered by user
+var cardsToAdd = []; // Array to hold new cards user enters
 
 //Turns off lobby and login divs and turns on CustomCard div
 function cardCreator() {
@@ -147,17 +147,19 @@ socket.on('Login_Status', loginStatus);
 socket.on('Online_Players_List',onlinePlayersList);
 socket.on('game_start', game_start);
 
-// Game Page
-socket.on('updatePlayersInGame', updatePlayersInGame);
+// Game Page - HTML updates
+socket.on('updatePlayerScores', updatePlayerScores);
 socket.on('updateHand', updateHand);
+socket.on('updatePrompt', updatePrompt);
 
-socket.on('judge', judgeDisplay); // TODO
-socket.on('judgingTime', judgingTime); // TODO
+// Judge Rotation Display Toggling
+socket.on('startJudgeRound', startJudgeRound);
+socket.on('endJudgeRound', endJudgeRound); 
 
-socket.on('cardPlayed', cardPlayed); // TODO
 
 // Custom Cards
 socket.on('customCards', customCards)
+
 // Reset Button
 socket.on('reset_current_game', reset_current_game);
 
@@ -175,14 +177,14 @@ function loginStatus(data) {
 		document.getElementById("Lobby").style.display = "block";
 		document.getElementById("LoginForm").style.display = "none";
 
-		// will also update the global user
-		user['username'] = data.username;
-		user['socket_id'] = socket.id;
-		console.log("Succesful login: " + user['username'], user['socket_id']);
+		// will also update the global client
+		client['username'] = data.username;
+		client['socket_id'] = socket.id;
+		console.log("Succesful login: " + client['username'], client['socket_id']);
 	}
 };
 
-function onlinePlayersList(data) {
+function onlinePlayersList(data, num_players_g1) {
 	// Updates the players currently online: HTML template looks like this:
 	/* <ul id="sortable">
 		<li>
@@ -226,7 +228,7 @@ function game_start(canStart, message) {
 		document.getElementById("Lobby").style.display = "none";
 		document.getElementById("LoginForm").style.display = "none";
 		document.getElementById("CustomCards").style.display = "none";
-		
+
 		// Turn on  Game div
 		document.getElementById("Game").style.display = "block";
 		document.getElementById("PlayerHand").style.display = "block";
@@ -236,21 +238,26 @@ function game_start(canStart, message) {
 	}
 }
 
-function updatePlayersInGame(playersList) {
+function updatePlayerScores(playersList, scores) {
 
+	console.log("updating playerscores", scores);
 	// Function to update the HTML 
-	let k = ('<h3> Players In Game: </h3> ') ;
+	let k = ('<h3> Player Scores </h3> ') ;
 	
 	for (let i = 0; i < playersList.length; i++) {
 		
-		if (playersList[i].judge) {
-			
+		let player = playersList[i];
+		let username = player.username;
+
+		console.log()
+		if (player.judge) {
+			 
 			k += '<font color="red">' 
-			 	+ "Judge: " + playersList[i].username 
+			 	+ "Judge: " + username + " { " + scores[username] + " } "
 			 	+ '</font>';			
 		} else {
 			k += '<small> '
-				+ playersList[i].username
+				+ player.username + " { " + scores[username] + " } ";
 				+ '</small>'
 		};
 	};
@@ -264,46 +271,95 @@ function updateHand(new_hand) {
 	
 	let k = ('<h3> Current Hand: Click a card to play </h3>');
 	for (let i = 0; i < new_hand.length; i++) {
-		k += '<button id="card-CSS" onclick="sendCard(' + i + ')"> ' + new_hand[i].value + ' </button>"'
+		let arg = i + "," + "'candidate'"; // use sendCard() with the 'candidate' flag
+		k += '<button id="card-CSS" onclick="sendCard(' + arg + ')"> ' + new_hand[i].value + ' </button>"'
 	};
 
 	document.getElementById('PlayerHand').innerHTML = k;
 };
 
-// TODO
-function judgeDisplay(judge_hand) {
-	console.log(" You are judge! ");
-	document.getElementById('PlayerHand').style.display = "none"; // instead of hiding display, we can just disable buttons
+function updatePrompt(prompt_msg) {
+	// update the prompt card with the prompt msg (just a string)
+	console.log("updating the prompt");
+
+	let k = 'Prompt: ';
+	k += '<button id="card-CSS>"' + prompt_msg + '</button>';
+
+	document.getElementById('PromptCard').innerHTML = k;
+}
+function startJudgeRound(judge_hand, judge) {
+	// Update Judge's html to show the judge hand
+	// Judge hand is a JSON object with keys being indices of the card,
+	// to access a card , judgehand[i] where i ... length of array
+	
+	console.log("Received from startJudgeRound:" + judge_hand);
+
+	// to access values of cards in judge_hand 
+	document.getElementById('PlayerHand').style.display = "none"; 
 	document.getElementById('JudgeSelect').style.display = "block";
-};
+	
+	let html;
+	let clientIsJudge = (client['username'] === judge.username);
+	
+	if (clientIsJudge) { 
+		
+		html = '<h3> Pick your favourite card for this round! </h3> '
 
-// TODO
-function judgingTime(judge_hand, judge) {
-	console.log( " Console has received the cards to judge: " + judge_hand);
+		for (let i = 0; i < judge_hand.length; i++) {
 
-	let k = "";
+			let arg = i + "," + "'winner'"; // use sendCard with the 'judge' flag
 
+			html += '<button id="card-CSS" onclick="sendCard(' + arg + ')"> ' 
+				+ judge_hand[i]['value'] 
+				+ ' </button>"'
+		}
 
-	if (user.username === judge.username) {
-		k += ('<h3> Pick your favourite card for this round! </h3> ');
-	} else { 
-		k +=  ('<h3> Judge ' + judge.username + ' is currently deciding');
-	}
+	} else { // if client is NOT judge, display the cards without button click
+		
+		html  = '<h3> Judge ' + judge.username + ' is currently deciding: ';
 
-	// display the cards
-	for (let i = 0; i < judge_hand.length; i++) {
-		k += '<button id="card-CSS" onclick="sendCard(' + i + ')"> ' + judge_hand[i].value + ' </button>"'
+		for (let i = 0; i < judge_hand.length; i++) {
+			html += '<button id="card-CSS"> '  
+				+ judge_hand[i]['value']  		
+				+ ' </button>"'
+		}
 	};
 
-	document.getElementById('judgeSelect').innerHTML = k;
+	document.getElementById('JudgeSelect').innerHTML = html;
 };
 
-// TODO
-function cardPlayed(data) {
-	// Card was played by a player to add to the pile to judge
-	console.log("Receiving a card being played from: " + data.username);
-	let cardid = data.cardid;
+
+function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores) {
+	
+	// Update with New Prompt
+	updatePrompt(new_prompt);
+
+	// Rotate to the next Judge
+	if (client['username'] == old_judge.username) {
+		
+		console.log(" You are no longer judge, this round you pick a card! ")
+		
+		document.getElementById('JudgeSelect').style.display = "block";
+		document.getElementById('PlayerHand').style.display = "block"; 
+
+	}
+	else if (client['username'] == new_judge.username) {
+		
+		console.log(" You are now the judge for the next round! ")
+
+		document.getElementById('PlayerHand').style.display = "none";
+		document.getElementById('JudgeSelect').innerHTML = "<h2> Players are still deciding... </h2>"
+	
+	} else { //every other player (that wasn't a judge or isn't a judge)
+		document.getElementById('JudgeSelect').style.display = "none";
+	}
+
+	// Update the ScoreBoard HTML
+	updatePlayerScores(playersList, scores);
+
+
 };
+
 
 function customCards(status, message) {
 	if (status) {

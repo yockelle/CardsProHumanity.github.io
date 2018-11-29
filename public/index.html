@@ -128,11 +128,11 @@
 
 		<!-- for each card in userhand (passed in from server, loop through and display-->
 		<div id="PromptCard">
-			<div class="card">
-			<img src="/public/CAH_Logo.png" alt="Avatar" style="width:50%">
-			<div class="container">
-			</div>
-			</div>
+			<!--
+				<h2> Current Prompt: </h2>
+				<button id="card-CSS" </button>
+			-->	
+
 		</div>
 
 		<div id="ResetGame">
@@ -145,8 +145,8 @@
 		<div id="PlayerHand">
 			<!--
 			<h2> Your Hand: Click a card to play: </h2>
-			<button id="card-CSS" onclick="sendCard('<%= userhand[0] %>');">
-				<%= userhand[0] %> </button>
+			<button id="card-CSS" onclick="sendCard();">
+				 </button>
 			-->
 		</div>
 		<canvas id="myCanvas" width="200" height="100"></canvas>

@@ -1,11 +1,16 @@
 const Player = require('./Player');
 const Deck = require('./Deck');
 const Card = require('./Card');
+const game = require('./game')
 
-var deck = new Deck("Player");
+var table = new game();
 
-var player1 = new Player("bob", 1234);
+table.addPlayer("bob415", 123);
+table.addPlayer("a", 222);
 
-player1.drawCards(deck, 5);
+table.initGame();
 
-console.log(player1.hand);
+table.cardPlayed(3, "bob415"); // bob plays card #3
+table.cardPlayed(4, "bob415");
+
+console.log(table.judgeHand[0]['value']);
