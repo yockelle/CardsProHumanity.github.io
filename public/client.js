@@ -284,6 +284,16 @@ socket.on('reset_current_game', function resetgame(user) {
 	document.getElementById("PlayerHand").style.display = "none";
 	document.getElementById("usersInGame").style.display = "none";
 
+	//Reset Custom Card Page:
+	let html = `<div id="CustomCards">` +
+	`<p>First things first, add your personalized cards. These could be the names of the players, some places in your local area, or things or people that feature in your "in" jokes. Remember, they need to be people or things (tangible or abstract) and you can add up to 20. Add your first one below followed by Add New Card and click Finished when you've entered your last.</p>` +
+	`<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>` +
+	`<button class="button" onclick="addNewCardButton()">Add New Card</button><br>` +
+	`<div id="displayCardsEntered"></div><br>` + 
+	`<button id="send_cards" class="button" onclick="emitNewCards()">Finished</button><br>` +
+	`</div>`
+	document.getElementById("CustomCards").outerHTML = html;	
+
 });
 
 
