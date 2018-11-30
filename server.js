@@ -337,12 +337,13 @@ function cardPlayed(socket, data, option) {
 
 	console.log('Received card at index:  ' + data.card_idx + ' from: ' + data.username);
 	
-	if (option == 'candidate') { 
+	if (option == 'candidate') { // When players are deciding cards for the prompt
 
 		// If player has not played yet or is a Judge 
 		if (!table.played.includes(data.username) && !table.isJudge(data.username)) {	
 			
 			console.log("Successfully playing card from: " + data.username + " " + data.card_idx);
+			
 			table.played.push(data.username);
 			table.cardPlayed(data.card_idx, data.username);
 			
@@ -366,7 +367,7 @@ function cardPlayed(socket, data, option) {
 			console.log("Card rejected from: " + data.username + " " + data.card_idx);
 		}
 		
-	} else if (option == 'winner') {
+	} else if (option == 'winner') { // when judge is deciding whih card is the winner
 		
 		console.log( 'Winner has been selected');
 
@@ -380,9 +381,9 @@ function cardPlayed(socket, data, option) {
 		let old_judge = table.getJudgePlayer();
 		// New judge, score update, new prompt,
 		table.endRound(winning_user);
-		let new_judge = table.getJudgePlayer();
 		
-		let new_prompt = table.promptCard;
+		let new_judge = table.getJudgePlayer();
+		let new_prompt = table.promptCard.value;
 		let scores = table.scores;
 
 		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores);
