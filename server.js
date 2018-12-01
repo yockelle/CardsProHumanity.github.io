@@ -61,7 +61,9 @@ server.listen(app.get("port"), function () {
 	console.log("Server started on port %s", app.get("port"));
 });
 
-/* *************** FUNCTIONS BELOW ****************** */
+
+
+/* *************** FUNCTIONS BELOW - these can be seperated to other files at a differnt time ****************** */
 
 function registerUser(socket, user_data) {	
 	
@@ -379,6 +381,7 @@ function cardPlayed(socket, data, option) {
 		console.log(`index of winning card is ${idx}, card is ${table.judgeHand[idx]}, owner is ${winning_user} `);
 
 		let old_judge = table.getJudgePlayer();
+		
 		// New judge, score update, new prompt,
 		table.endRound(winning_user);
 		

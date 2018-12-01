@@ -6,7 +6,7 @@ module.exports = class Game {
 	constructor() { 
 		
 		this.connectedPlayers = 0;
-		this.numPlayersReady = [];
+		this.numPlayersReady = []; // ready for custom cards
 
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
 		this.scores = {};
@@ -108,9 +108,11 @@ module.exports = class Game {
 
 	newJudge() {
 		// rotates to next judge
-		this.PlayersList[this.idx++] = false;
+		this.PlayersList[this.idx++].judge = false;
 		this.idx %= this.getPlayerCount;
-		this.PlayersList[this.idx];
+		this.PlayersList[this.idx].judge = true;
+
+		console.log(`The new judge is now: ${this.PlayersList[this.idx]}`);
 	}
 
 	// private (to be used bo endRound() only )
