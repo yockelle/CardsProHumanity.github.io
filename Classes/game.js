@@ -225,12 +225,11 @@ module.exports = class Game {
 		 * 3) Assigning judge to the next Player
 
 		*/
-
 		this.PlayersList[this.judgeidx++].judge = false; // 1 
-		this.judgeidx %= this.getPlayerCount; // 2
+		this.judgeidx %= this.getPlayerCount(); // 2
 		this.PlayersList[this.judgeidx].judge = true; // 3
 
-		console.log(`The new judge is now: ${this.PlayersList[this.idx]}`);
+		console.log(`The new judge is now: ${this.PlayersList[this.judgeidx]}`);
 	}
 
 

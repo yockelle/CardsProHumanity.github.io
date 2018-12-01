@@ -13,11 +13,25 @@ table.initGame();
 table.cardPlayed(3, "bob415"); // bob plays card #3
 table.cardPlayed(4, "bob415");
 
-console.log("Winning card at index 0 is ", table.judgeHand[0]['value']);
+//console.log("Winning card at index 0 is ", table.judgeHand[0]['value']);
 
 //console.log(table.getGameState());
 
 table.dealPromptCard();
 
-console.log("Prompt is ", table.promptCard);
-console.log(table.buildSentence(0));
+//console.log("Prompt is ", table.promptCard);
+//console.log(table.buildSentence(0));
+
+console.log('----');
+
+// console.log(table.PlayersList);
+//console.log(table.getJudgePlayer());
+
+for (let i = 0; i<20; i++){
+	table.newJudge();
+}
+
+
+// console.log(table.PlayersList);
+
+//console.log(table.getJudgePlayer());
