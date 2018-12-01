@@ -19,7 +19,7 @@ module.exports = class Card {
 	}
 
 	toString() {
-    	return "CID#" +  this.id + " Text: " + this.value + " Owner " + this.owner;
+    	return `<Card(${this.id}, '${this.value}', ${this.owner}')`;
   	};
 
 }

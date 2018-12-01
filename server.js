@@ -255,8 +255,10 @@ function newUserCards(socket, newPlayerCards) {
 
 		// Check if there is a prompt:
 		if (table.promptCard.value == "") {
-			console.log(`promptCard's value is empty ${promptCard.id}`);
-			throw "Empty value for prompt card!"
+			console.log(`promptCard's value is empty ${table.promptCard.id}`);
+			// throw "Empty value for prompt card!"
+			console.log("Possibly check your promptCard file, it may have an empty line..");
+			table.promptCard.value == "See server's console.log(). Empty Prompt Value error";
 		}
 
 		// Send prompt to everyone
@@ -335,18 +337,21 @@ function cardPlayed(socket, data, option) {
 	/* Receives card being played by player from client.js sendCard() function 
 	
 	Parameters:
-	var data = {
+
+	* var data = {
 		card_idx: card_idx // Index of the card played from client
 		username: user.username, // Username of the person who played that card
 		socket_id: user.socket_id // socket id for the client that played the card
-	}
+	  }
 
-	option (string) can be either 'candidate' or 'winner'
-	'candidate' card is when a nonjudge player plays a card to be sent for judging
-	'winner' card is the card selected by the judge to win
+	* option (string) can be either 'candidate' or 'winner'
+		1) 'candidate' card is when a nonjudge player plays a card to be sent for judging
+		2) 'winner' card is the card selected by the judge to win
 	
-	emits: 
-	If candidate  card is played
+	Emits: 
+	If candidate card is played. The player answering it c
+	If the winning card is played (that was selected by the judge), emit to everyone a winner of that round has been found
+
 	*/
 
 	console.log(`${data.username} is requesting to play a card at ${data.card_idx}`);
@@ -355,61 +360,93 @@ function cardPlayed(socket, data, option) {
 
 		/* If player has NOT YET PLAYED or and is NOT A JUDGE then:
 		 * 1)  Send the card to the judge hand
-		 * 2)  Emit to the client that they can't play another card
-		 * 3)  Check if it's time to swap to 'judge' state
+		 * 2)  Emit to the client that they can't play another card, and highlight the card they've played
+		 * 3)  Check if it's time to swap to 'judge' state by checking if every other player has played
 		 	 If it is time to do judge then:
 		 	 	* A) Swap to judgeState
-		 	 	* B) Emit the new judgeState, and judgeHand to all the clients
+		 	 	* B) Send to all clients to switch to judging state HTML
 		*/
-		if (!table.played.includes(data.username) && !table.isJudge(data.username)) {	
+		if (!table.hasPlayed(data.username) && !table.isJudge(data.username)) {	
 			
 			console.log("Successfully accepted card from: " + data.username + " " + data.card_idx);
 			
 			// 1)
-			table.played.push(data.username);
 			table.cardPlayed(data.card_idx, data.username);
 			
-			// 2
-			
+			// 2) Emission from server to tell client to highlight the card (in HTML) to signify disabled button
+			socket.emit('disableAnswers', data['card_idx']); // Disable the buttons
 
-			// 3)
-			let everyoneHasPlayed = (table.played.length === table.getPlayerCount() - 1);
-			console.log(everyoneHasPlayed, table.getGameState() === 'answer', table.getGameState());
-			if (everyoneHasPlayed && (table.getGameState() === 'answer')) {
+			// 3) Check if everyone else has played 
+			if (table.everyonePlayed() && (table.getGameState() === 'answer')) {
 				console.log(`Everyone has played, emitting the judgehand for all to see: ${table.judgeHand}`);
 
-				//A) 
+				//A) Switch the gamestate into Judging time
 				table.switchJudgeState();
 				let judge = table.getJudgePlayer();
 
-				io.to(judge.socket_id).emit('showJudgeDisplay', table.judgeHand);
-				io.emit('startJudgeRound', table.judgeHand, judge);
-			} 
-		} else {
+				// B) 
+				io.emit('startJudgeRound', table.judgeHand, judge); // Swaps game mode to all clients that
+				io.to(judge.socket_id).emit('showJudgeDisplay', table.judgeHand); // show Judge HTML to the judge
+				
+			} else {
+				console.log(`Those who played: ${table.played}. Waiting for ${table.getPlayerCount()-1} total to play`);
+			}
+		} else { // Reject the card they are trying to answer with if they are a judge or they've already played
 			console.log("Card rejected from: " + data.username + " " + data.card_idx);
+			
+			let reason;
+			if (table.hasPlayed(data.username)) {
+				reason = "already played";
+			} else if (table.isJudge(data.username)) {
+				reason = "is a judge"
+			}
+			console.log(`Rejected because ${data.username} ${reason}.`);
 		}
 		
 	} else if (option == 'winner') { // when judge is deciding whih card is the winner
 		
+		/* This option occurs when the client, who is the current judge, sends the winning card to the server
+		 * 1) obtain the owner of the card
+		 * 2) Combine the prompt with the winning answer to produce the full sentence
+		 * 3) Get the Player object of the current judge
+		 * 4) end the round -> updating the scores of the winner, promoting the next judge, drawing new prompt
+		 * 5) Emitting to all players end judge round:
+		 		old_judge : Player object of old judge
+		 		new_judge : Player object of next judge 
+		 		new_prompt : next prompt
+		 		table.PlayersList : Array of Player objects of players in the game
+		 		table.scores : newly updated hashmap of each players scores
+		 		winner : JSON object { user (string), completed_text (string)} of the winning card and winning full sentence
+		*/
+
+
 		console.log( 'Winner has been selected');
 
-		// Find out who is the winner from the index of the card
+		// 1) Find out who is the winner from the index of the card
 		let idx = data['card_idx'];
-
 		let winning_user = table.judgeHand[idx].owner; // Gets the owner of the card
-
 		console.log(`index of winning card is ${idx}, card is ${table.judgeHand[idx]}, owner is ${winning_user} `);
 
+		// 2 Combines the prompt and winning answer to produce the full sentence
+		let completed_text = table.buildSentence(idx); 
+
+		let winner = {
+			user: winning_user,
+			completed_text: completed_text
+		};
+
+		// 3) Obtain the current judge 
 		let old_judge = table.getJudgePlayer();
 		
-		// New judge, score update, new prompt,
-		table.endRound(winning_user);
+		// 4) New judge, score update, new prompt, and switch to Answer State
+		table.switchAnswerState(winning_user);
 		
 		let new_judge = table.getJudgePlayer();
 		let new_prompt = table.promptCard.value;
 		let scores = table.scores;
 
-		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores);
+		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores, winner);
+	
 	} else {
 		throw option + ' is an invalid option. Must be either "winner" or "candidate" '; 
 	}

@@ -101,7 +101,7 @@ module.exports = class Deck {
         <Deck('Prompt') 350>
         */
 
-        return `<Deck('${this.type}) ${this.getLength}>)` + this.cards;
+        return `<Deck('${this.type}) ${this.getLength()}>)`;
     }
 
 

@@ -12,7 +12,7 @@ module.exports = class Game {
 		// Player & Scoring information
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
 		this.scores = {};
-		this.played = [];
+		this.played = new Set();
 
 		// Board: Decks and prompt
 		this.PlayerDeck = new Deck('Player'); 
@@ -111,6 +111,27 @@ module.exports = class Game {
 
 		throw username + " ain't a valid username in the PlayersList! ";
 
+	}
+
+	hasPlayed(username){
+		/* Check whether player has played yet --> boolean
+		
+		Parameters 
+		username (string)
+
+		Returns:
+		True/ False - set membership
+		*/
+		return this.played.has(username);
+	}
+
+	everyonePlayed(){
+		/* check whether every player has played 
+
+		Returns: 
+		True/False, everyone has played.
+		*/
+		return this.played.size === this.getPlayerCount() - 1;
 	}
 
 	/* ------------------------------ Player Adding / Disconnecting --------------------------------------*/
@@ -247,11 +268,15 @@ module.exports = class Game {
 		void 
 
 		*/ 
+		//1)
 		let card_player = this.getPlayer(username);
+		//2)
 		let played_card = card_player.playCard(card_idx, this.PlayerDeck);
 		
+		//3)
 		console.log("Played card is: " , played_card);
 		this.judgeHand.push(played_card);
+		this.played.add(username);
 
 	}
 
@@ -271,8 +296,13 @@ module.exports = class Game {
 
 		*/
 		// 1)
-		this.played = [] 
-		this.judgeHand = []
+		console.log("called switchAnswerState(). BEFORE: --{", this.played, "}--.");
+		this.played.clear(); 
+		console.log("AFTER: --{", this.played, "}--");
+		console.log("judge hand BEFORE --{", this.judgeHand), "}--";
+		this.judgeHand = [];
+		console.log("judge hand AFTER --{", this.judgeHand, "}--");
+
 
 		// 2)
 		this.dealPromptCard();
@@ -286,7 +316,13 @@ module.exports = class Game {
 		// 4
 		if (this.gameState == 'judge') {
 			this.gameState == 'answer';
-			console.log(`Successfully swapped gameState to answer`);
+			console.log(`SWAPPED TO GAMESTATE: ANSWER`);
+
+			let entries = [];
+			for (let item of this.played.keys()) entries.push(item);
+
+			console.log(`Played is ${entries} JudgeHand is ${this.judgeHand.length}`);
+
 		} else if (this.gameState === 'answer') {
 			throw `Error! Looks like gamestate is already in answer`;
 		} else {
@@ -308,6 +344,7 @@ module.exports = class Game {
 
 		 // 2) 
 		 this.gameState = 'judge';
+		 console.log("SWAPPED TO GAMESTATE: JUDGING")
 	}
 	
 	_updateScoresAndCheckWinner(username) { 
@@ -336,5 +373,25 @@ module.exports = class Game {
 		this.winner = winner;
 	}
 
+	toString() {
+
+		return `<game object>
+		Players List: ${this.PlayersList}
+		Scores: ${this.scores.toString()}
+		Played: ${this.played.toString()}
+
+		Decks:
+		${this.PlayerDeck.toString()}
+		${this.PromptDeck.toString()}
+
+		Prompt: ${this.promptCard}
+		Judge Hand: ${this.judgeHand}
+		Current Judge: ${this.getJudgePlayer()}
+
+		Game State: ${this.gameState}
+		Winner? : ${this.winner}
+		`
+	}
 }
+
 

@@ -72,9 +72,16 @@ function continueGame() {
 	// Emitted on 'Continue' button click
 	socket.emit("continueGame");
 }
-// TODO
+
 function sendCard(card_idx, option) { 
-	// Emited upon clicking a card . option paramter should be either 'candidate' or 'judge'
+	/* Emited upon clicking any card - either as an answer (from the candidates) or as a winner (selected by Judge).
+	 * Paramters:
+	 card_idx (int) value between 0 - 5 (or the length of their hand) signifying the index of the card
+	 option (string) either 'candidate' or 'judge'
+	 * Emits:
+	  Emits to the server the card_idx, and option as 'cardPlayed'
+	*/
+
 	var data = {
 		card_idx: card_idx,
 		username: client.username, // username will keep track of who sent the card 
@@ -93,7 +100,7 @@ function resetGame() {
 }
 
 function pingServer() {
-	// for debugging
+	/* Debugging button to ping the server with the socket's ID */
 	socket.emit('pingServer', socket.id);
 }
 
@@ -327,57 +334,101 @@ function updatePrompt(prompt_msg) {
 }
 
 function startJudgeRound(judge_hand, judge) {
-	// Update Judge's html to show the judge hand
-	// Judge hand is a JSON object with keys being indices of the card,
-	// to access a card , judgehand[i] where i ... length of array
+	/* Function for socket.on('startJudgeRound')
+	 * Parameters:
+		judge_hand (array of Card objects) - in the order that they were pushed
+		judge (Player object) - the judge player 
+	 * Updates the HTML :
+	  1) Players don't see their hands anymore, and only see what the Judge must select
+	  2) If the client is a judge, make the cards be displayed with buttons
+	  3) If the client is not a judge, make the cards be displaeyd without buttons
+	  4) change the HTML
+
+	 */
 	
 	console.log("Received from startJudgeRound:" + judge_hand);
 
-	// to access values of cards in judge_hand 
+	// 1) Hide their hands, display the Judge's possible selections
 	document.getElementById('PlayerHand').style.display = "none"; 
 	document.getElementById('JudgeSelect').style.display = "block";
 	
+
 	let html;
 	let clientIsJudge = (client['username'] === judge.username);
 	
+	// 2) Client is a judge - the caards displayed can be clicked
 	if (clientIsJudge) { 
 		
 		html = '<h3> Pick your favourite card for this round! </h3> '
+		html += `<div class="row">`  // parent div
 
 		for (let i = 0; i < judge_hand.length; i++) {
 
-			let arg = i + "," + "'winner'"; // use sendCard with the 'judge' flag
-
-			html += '<button id="card-CSS" onclick="sendCard(' + arg + ')"> ' 
-				+ judge_hand[i]['value'] 
-				+ ' </button>"'
+			let args = `${i},'winner'`; // sendCard(i , 'winner') 
+			
+			html += `<div class="card">
+	            		<div class="card-body">
+	              			<h5 class="card-title"> ${judge_hand[i]['value']} </h5>
+	              			<button id="cardbutton" onclick="sendCard(${args})"> This is the best one </button>
+	            		</div>
+	          		</div>` 
 		}
 
+		html += `</div>` // closing parent div
+
+	// 3) client isn't a judge - the card displayed cannot be clicked
 	} else { // if client is NOT judge, display the cards without button click
 		
 		html  = '<h3> Judge ' + judge.username + ' is currently deciding: ';
+		html += `<div class="row">`  // parent div
 
 		for (let i = 0; i < judge_hand.length; i++) {
-			html += '<button id="card-CSS"> '  
-				+ judge_hand[i]['value']  		
-				+ ' </button>"'
+
+			let args = `${i},'winner'`; // sendCard(i , 'winner') 
+			
+			html += `<div class="card">
+	            		<div class="card-body">
+	              			<h5 class="card-title"> ${judge_hand[i]['value']} </h5>
+	            		</div>
+	          		</div>` 
 		}
+
+		html += `</div>` // closing parent div
 	};
 
+	// 4)
 	document.getElementById('JudgeSelect').innerHTML = html;
 };
 
 
-function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores) {
-	
+function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores, winner) {
+	/* ends the current round. 
+	 * Parameters:
+	  old_judge (Player object)
+	  new_judge (Player object)
+	  new_prompt (Card object)
+	  playersList (array of Player objects)
+	  scores (hashmap. {username (string) : score (int) } )
+	  winner (JSON object with { user (String) , completed_text (string)} )
+		
+	  * HTML changes
+	  1) Alerts everyone the winner of that round + the completed text (combined prompt + answer)
+	  2) 
+	  3) Alerts the old judge and new judge, and fix their HTML accordingly
+	  
+	*/
 	console.log("judge round ended: Client is: ",  client['username'], ` old: ${old_judge.username}, new: ${new_judge.username}`);
-	// Update with New Prompt
+	
+	let winning_user = winner['user'];
+	let completed_text = winner['completed_text'];
+
+	// 1) Update with New Prompt
 	updatePrompt(new_prompt);
 
-	// Rotate to the next Judge
+	// 2) Alert old and new judge Rotate to the next Judge
 	if (client['username'] == old_judge.username) {
 		
-		console.log(" You are no longer judge, this round you pick a card! ")
+		alert(" You are no longer judge, this round you pick a card! ")
 		
 		document.getElementById('JudgeSelect').style.display = "none";
 		document.getElementById('PlayerHand').style.display = "block"; 
@@ -385,12 +436,15 @@ function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores) {
 	}
 	else if (client['username'] == new_judge.username) {
 		
-		console.log(" You are now the judge for the next round! ")
+		alert(`${winning_user} has won the round! ${completed_text}`);
+
+		alert(" You are now the judge for the next round! ")
 
 		document.getElementById('PlayerHand').style.display = "none";
 		document.getElementById('JudgeSelect').innerHTML = "<h2> Players are still deciding... </h2>"
 	
 	} else { //every other player (that wasn't a judge or isn't a judge)
+		alert(`${winning_user} has won the round! ${completed_text}`);
 		document.getElementById('JudgeSelect').style.display = "none";
 	}
 
