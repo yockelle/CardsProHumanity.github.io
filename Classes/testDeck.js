@@ -14,3 +14,5 @@ table.cardPlayed(3, "bob415"); // bob plays card #3
 table.cardPlayed(4, "bob415");
 
 console.log(table.judgeHand[0]['value']);
+
+console.log(table.getGameState());
