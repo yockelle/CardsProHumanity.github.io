@@ -191,6 +191,33 @@ module.exports = class Game {
 		this.promptCard = this.PromptDeck.drawCard();
 	}
 
+	buildSentence(idx) {
+		/* builds the complete Prompt + answer 
+		 Parameters:
+		 idx (int) index of the Card object on the winning answer (from the Judge Hand) 
+
+		 Return
+		 completed_text (string) : the string built from combining prompt and answer */
+
+		 
+		 let prompt_text = this.promptCard.value;
+		 let answer_text =  this.judgeHand[idx].value;
+		 
+		 let pattern = /[_]+/;
+		 let completed_text;
+		 
+		 let match_found = pattern.test(prompt_text);
+		 
+		 if (match_found) {
+		 	completed_text = prompt_text.replace(pattern, answer_text);
+		 } else {
+		 	completed_text = `${prompt_text} ${answer_text}`;
+		 }
+
+		 return completed_text
+
+	}
+
 	newJudge() {
 		/* Rotates to next judge, and updating the judge.idx by:
 		 * 1) Current judge is no longer judge, and incrementing it to the next judge
