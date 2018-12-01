@@ -1,4 +1,4 @@
-
+"use strict"
 
 /* -------- Global Variables for the client  ----------- */
 var socket = io();
@@ -92,6 +92,11 @@ function resetGame() {
 	socket.emit('ResetGameButtonPressed') //sending request to server to reset game
 }
 
+function pingServer() {
+	// for debugging
+	socket.emit('pingServer', socket.id);
+}
+
 /* ------------------------------------ Card Creation Functions ------------------------------------ */
 var cardNum = 1; // Keeps track of new cards entered by user
 var cardsToAdd = []; // Array to hold new cards user enters
@@ -142,20 +147,21 @@ var emitNewCards = function() {
 // Login Page
 socket.on('Registration_Status', registrationStatus);
 socket.on('Login_Status', loginStatus);
+socket.on('Disconnected_Player', disconnectedPlayer);
 
 // Lobby Page
-socket.on('Online_Players_List',onlinePlayersList);
+socket.on('Online_Players_List', onlinePlayersList);
 socket.on('game_start', game_start);
 
 // Game Page - HTML updates
 socket.on('updatePlayerScores', updatePlayerScores);
-socket.on('updateHand', updateHand);
+socket.on('updateHand', updateHand); // calls updateHand with clickable = true
 socket.on('updatePrompt', updatePrompt);
+
 
 // Judge Rotation Display Toggling
 socket.on('startJudgeRound', startJudgeRound);
 socket.on('endJudgeRound', endJudgeRound); 
-
 
 // Custom Cards
 socket.on('customCards', customCards)
@@ -184,6 +190,14 @@ function loginStatus(data) {
 	}
 };
 
+function disconnectedPlayer(){
+	/* Creates a 'Continue' button for the disconnected player */
+	let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="continueGame()">Continue</a>');
+	document.getElementById("join_g1").innerHTML = html;
+	document.getElementById("start_g1").style.display = "none";
+}
+
+
 function onlinePlayersList(data, num_players_g1) {
 	// Updates the players currently online: HTML template looks like this:
 	/* <ul id="sortable">
@@ -200,7 +214,7 @@ function onlinePlayersList(data, num_players_g1) {
 		</li>
 	</ul> */
 	let k = ('<ul id="sortable">');
-	for (key in data) {
+	for (let key in data) {
 		// console.log("Current Players:", "SocketID: ", key, "UserName: ", data[key])
 
 		k += ('<li>' +
@@ -210,7 +224,7 @@ function onlinePlayersList(data, num_players_g1) {
 			'</div>' +
 			'<div class="media-body">');
 		k += ('<h4>'+ data[key] + '</h4>');
-		k += ('<p>SocketID: '+ key + '</p>');
+		k += ('<p>SocketID: '+ key + '</p>'); // orig <p> and </p>
 		k += ('</div></div></li>');
 	};
 	k += '</ul>';
@@ -265,27 +279,53 @@ function updatePlayerScores(playersList, scores) {
 };
 
 function updateHand(new_hand) {
-	// update client's hand with the new array of the hand
+	/* update client's hand with the new array of the hand
+	Parameter:
+	new_hand : Array of card object
+	clickable : boolean - whether or not you want the cards to be clickable
+	*/
 	console.log("updating hand");
-	
-	let k = ('<h3> Current Hand: Click a card to play </h3>');
+
+	let handhtml = `<div class="row">
+						<div class="card-deck">`; // Parent Div
+
+
+	// Produce the cards
 	for (let i = 0; i < new_hand.length; i++) {
-		let arg = i + "," + "'candidate'"; // use sendCard() with the 'candidate' flag
-		k += '<button id="card-CSS" onclick="sendCard(' + arg + ')"> ' + new_hand[i].value + ' </button>"'
+	
+		handhtml += (`<div class="card"> 
+				<div class="card-body" >
+				   <h5 class="card-title">${new_hand[i].value}</h5>
+				   <button id="cardbutton" onclick="sendCard(${i}, 'candidate')"> submit </button>
+				</div>
+			   </div>`);
+		if (i==2) {
+			handhtml += `<div class="w-100"></div>`; // add spacing after the third card
+		}
 	};
 
-	document.getElementById('PlayerHand').innerHTML = k;
+	handhtml += 	`</div>
+	 			</div>`; // Close Parent Div
+
+	
+	document.getElementById('PlayerHand').innerHTML = handhtml;
 };
 
 function updatePrompt(prompt_msg) {
 	// update the prompt card with the prompt msg (just a string)
-	console.log("updating the prompt");
+	console.log(`updating the prompt ${prompt_msg}`);
 
-	let k = 'Prompt: ';
-	k += '<button id="card-CSS>"' + prompt_msg + '</button>';
+	let promptHTML = `<div class="col-lg-3 col-sm-5 col-xs-6">
+						 <div class="card text-white bg-dark">
+						 	<div class="card-body">
+						  		<h5 class="card-title"> ${prompt_msg} </h5>
+						  	</div>
+						  </div>
+						</div>`
 
-	document.getElementById('PromptCard').innerHTML = k;
+	document.getElementById('PromptCard').innerHTML = promptHTML;
 }
+
 function startJudgeRound(judge_hand, judge) {
 	// Update Judge's html to show the judge hand
 	// Judge hand is a JSON object with keys being indices of the card,
@@ -359,6 +399,7 @@ function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores) {
 
 
 };
+
 
 
 function customCards(status, message) {

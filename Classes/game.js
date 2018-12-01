@@ -152,7 +152,7 @@ module.exports = class Game {
 
 	/* ------------------------------- Main Game Logic Functions ---------------------------------- */
 
-	initGame(n = 5) {
+	initGame(n = 6) {
 		/* Initializes the game by:
 		 * 1) Drawing n cards for each player in this.PlayersList
 		 * 2) Initializing the scoreboard of every player in this.PlayersList

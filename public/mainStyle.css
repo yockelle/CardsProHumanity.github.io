@@ -24,22 +24,16 @@ html, body {
     display: none;
 }
 
-#PromptCard {
-    display: block;
-}
-
 #JudgeSelect {
     display: none;
 }
 
-#usersInGame {
-    display: none;
-}
 
 #start_g1 {
     display: block;
 }
 
+/*
 .card{
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     transition: 0.3s;
@@ -53,12 +47,13 @@ html, body {
 .card:hover {
     box-shadow: 0 8px 16px 0 rgba(243, 238, 238, 0.2);
 }
+*/
 
-/*.container {
+.container {
     padding: 2px 16px;
     background-color: gray;
     color: white;
-} */
+}
 
 .button {
     background-color: #4CAF50;
@@ -75,13 +70,6 @@ html, body {
 
 #card-CSS {
     background-image: url( 'https://i.pinimg.com/236x/a3/09/42/a30942f27ef97635607d09c882f3c9b2--cards-against-humanity-dead-inside.jpg' );
-    background-size: 100px 130px;
-    height: 134px;  
-    width: 104px;
-}
-
-#PromptCard {
-    background-image: url('https://i.pinimg.com/236x/a3/09/42/a30942f27ef97635607d09c882f3c9b2--cards-against-humanity-dead-inside.jpg' );
     background-size: 100px 130px;
     height: 134px;  
     width: 104px;

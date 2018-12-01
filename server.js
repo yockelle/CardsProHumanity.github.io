@@ -1,5 +1,5 @@
 var PORT = process.env.PORT || 8000;
-var dev = true;
+var dev = false;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
@@ -49,6 +49,7 @@ io.on('connection', function newConnection(socket) {
 	socket.on('cardPlayed', (data, option) => cardPlayed(socket, data, option)); // Player sends their choice cards 
 	socket.on('ResetGameButtonPressed', () => ResetGameButtonPressed(socket));
 
+	socket.on('pingServer', (client_sockid) => console.log(client_sockid, "has pinged us"));
 }); 
 
 setInterval(() => {
@@ -212,7 +213,7 @@ function loginUser(socket, user_data) {
 };
 
 function disconnect(socket) {
-
+	/* Handle disconnected players, removing them from the onlinePlayers list */
 	table.PlayersList.find( (element) => {
 		if (element.socket_id === socket.id) {
 			element.connect = false;
@@ -251,6 +252,13 @@ function newUserCards(socket, newPlayerCards) {
 			io.to(player.socket_id).emit('updateHand', player.hand);
 			io.to(player.socket_id).emit('updatePlayerScores', table.PlayersList, table.scores);
 		}
+
+		// Check if there is a prompt:
+		if (table.promptCard.value == "") {
+			console.log(`promptCard's value is empty ${promptCard.id}`);
+			throw "Empty value for prompt card!"
+		}
+
 		// Send prompt to everyone
 		console.log('sending the prompt card' + table.promptCard.value);
 		io.emit('updatePrompt', table.promptCard.value);
@@ -305,6 +313,7 @@ function initGame(socket, canStart) {
 };
 
 function continueGame(socket) {
+	/* Allows a player in a game to reconnect */
 	let message = "Player is continuing game.";
 
 	for (let i = 0; i < table.getPlayerCount(); i++) {
@@ -315,6 +324,7 @@ function continueGame(socket) {
 			console.log("emitting to ", player.username, player.socket_id);
 			io.to(player.socket_id).emit('updateHand', player.hand);
 			io.to(player.socket_id).emit('updatePlayerScores', table.PlayersList, table.scores);
+			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
 			break;
 		}
 	}
@@ -322,44 +332,54 @@ function continueGame(socket) {
 };
 
 function cardPlayed(socket, data, option) {
-	// Receives card being played by player from client.js sendCard() function 
+	/* Receives card being played by player from client.js sendCard() function 
 	
-	/* 
+	Parameters:
 	var data = {
 		card_idx: card_idx // Index of the card played from client
 		username: user.username, // Username of the person who played that card
 		socket_id: user.socket_id // socket id for the client that played the card
 	}
 
-	option (a string) can be either 'candidate' or 'winner'
+	option (string) can be either 'candidate' or 'winner'
 	'candidate' card is when a nonjudge player plays a card to be sent for judging
 	'winner' card is the card selected by the judge to win
-
+	
+	emits: 
+	If candidate  card is played
 	*/
 
-	console.log('Received card at index:  ' + data.card_idx + ' from: ' + data.username);
+	console.log(`${data.username} is requesting to play a card at ${data.card_idx}`);
 	
-	if (option == 'candidate') { // When players are deciding cards for the prompt
+	if (option == 'candidate') { 
 
-		// If player has not played yet or is a Judge 
+		/* If player has NOT YET PLAYED or and is NOT A JUDGE then:
+		 * 1)  Send the card to the judge hand
+		 * 2)  Emit to the client that they can't play another card
+		 * 3)  Check if it's time to swap to 'judge' state
+		 	 If it is time to do judge then:
+		 	 	* A) Swap to judgeState
+		 	 	* B) Emit the new judgeState, and judgeHand to all the clients
+		*/
 		if (!table.played.includes(data.username) && !table.isJudge(data.username)) {	
 			
-			console.log("Successfully playing card from: " + data.username + " " + data.card_idx);
+			console.log("Successfully accepted card from: " + data.username + " " + data.card_idx);
 			
+			// 1)
 			table.played.push(data.username);
 			table.cardPlayed(data.card_idx, data.username);
 			
-			io.emit('cardPlayed', data);
+			// 2
+			
 
-			// If everyone has played a card, it's time for the judge to judge
+			// 3)
 			let everyoneHasPlayed = (table.played.length === table.getPlayerCount() - 1);
-			console.log("has everyone played: " + everyoneHasPlayed, table.played.length, table.getPlayerCount());
+			console.log(everyoneHasPlayed, table.getGameState() === 'answer', table.getGameState());
+			if (everyoneHasPlayed && (table.getGameState() === 'answer')) {
+				console.log(`Everyone has played, emitting the judgehand for all to see: ${table.judgeHand}`);
 
-			if (everyoneHasPlayed) {
-				console.log(" Everyone has played, emitting the judgehand for all to see: " 
-					+ table.judgeHand);
-
-				// Begin Judgeround
+				//A) 
+				table.switchJudgeState();
 				let judge = table.getJudgePlayer();
 
 				io.to(judge.socket_id).emit('showJudgeDisplay', table.judgeHand);
@@ -394,18 +414,21 @@ function cardPlayed(socket, data, option) {
 		throw option + ' is an invalid option. Must be either "winner" or "candidate" '; 
 	}
 
-};
+}
 
 function ResetGameButtonPressed(socket) {
 
 	let user = totalOnlinePlayers[socket.id];
 	console.log('Resetting Game 1. Request sent by user:',user,'(',socket.id,')');
+
  	let playerList = table.PlayersList;
+
  	//For each player in the table, emit a message to tell client to reset game
 	for (let i = 0; i < playerList.length; i ++) {
 		let player = playerList[i];
 		io.to(player.socket_id).emit('reset_current_game',user);
 	}
+
  	//create a brand new table object to replace the old table
 	table = new Game();
  };
