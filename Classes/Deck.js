@@ -64,7 +64,7 @@ module.exports = class Deck {
         let cards = default_lines.concat(custom_lines);
 
         var i = 0; // incremental counter for id
-        return cards.map( (value) => new Card(i++, value));
+        return cards.map( (value) => new Card(i++, value.trim()));
 
     }
 
