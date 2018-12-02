@@ -7,7 +7,9 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <!-- import boostrap -->
+<!--
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+-->
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
 
 
@@ -18,12 +20,40 @@
 <link rel="stylesheet" type="text/css" href="/public/lobbyPage.css">
 
 <!DOCTYPE html>
-<html>
+<html lang="en"> 
 
 <head>
-	<meta charset="UTF-8">
-	<title>Cards against Humanity</title>
+	 <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,700" rel="stylesheet">
+    <style>
+    body {
+      background-color: #e3e3e3;
+      font-family: 'Roboto', sans-serif;
+    }
+    h5, h1 {
+      font-weight: 700;
+      color: red;
+    }
+    p {
+    	color: blue;
+    }
+    .card {
+      margin-top: 25px;
+      border-radius: 10px;
+      height: 350px;
+    }
+    .bg-dark {
+      background-color: black!important;
+    }
+    </style>
+    <title>Cards Against Humanity</title>
 </head>
+
 
 <body>
 	<!--Default display once someone goes to our site-->
@@ -36,12 +66,12 @@
 						<h2>Login</h2>
 						<p>Please enter your username and password</p>
 					</div>
-					<form id="Login" onsubmit="userRegister(); return false;">
+					<form id="Login">
 						<div class="form-group">
-							<input type="text" class="form-control" id="inputname" name="username" placeholder="Username" required>
+							<input type="text" class="form-control" id="inputname" placeholder="Username">
 						</div>
 						<div class="form-group">
-							<input type="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" class="form-control" id="inputpass" name="password" placeholder="Password" required title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
+							<input type="password" class="form-control" id="inputpass" placeholder="Password">
 						</div>
 						<div class="forgot">
 							<a href="#">Forgot password?</a>
@@ -50,7 +80,7 @@
 							<button type="button" class="btn btn-primary" onclick="userLogin()">Login</button>
 						</div>
 						<div id="buttons">
-							<button type="submit" class="btn btn-secondary">Register</button>
+							<button type="button" class="btn btn-secondary" onclick="userRegister()">Register</button>
 						</div>
 					</form>
 				</div>
@@ -99,16 +129,6 @@
 						</div>
 						<div id="start_g1" class="media-right align-self-center">
 							<a href="#" class="btn btn-default" onclick="initGame()">Start</a>
-						</div>
-
-
-<!-- 
-						<div class="media-right align-self-center">
-							<a href="#" class="btn btn-default" onclick="cardCreator()">Start</a>
-						</div> -->
-
-
-
 
 					</div>
 				</li>
@@ -124,52 +144,79 @@
 		<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>
 		<button class="button" onclick="addNewCardButton()">Add New Card</button><br>
 		<div id="displayCardsEntered"></div><br>
-		<button id="send_cards" class="button" onclick="emitNewCards()">Finished</button><br>
+		<button id="send_cards" onclick="emitNewCards()">Finished</button><br>
 	</div>
-
 
 	<!-- GAME -->
 	<!--Default display is none, will show once player starts game-->
 	<div id="Game">
-		
 
-		<!-- for each card in userhand (passed in from server, loop through and display-->
-		<div id="PromptCard">
-			<div class="card">
-			<img src="/public/CAH_Logo.png" alt="Avatar" style="width:50%">
-			<div class="container">
-					<h4><b>
-							
-							<%= promptCard["cardid"]%>
-							<%= promptCard["cardValue"]%>
-						
-					</b></h4>
+		<div class="container">
+		    <div class="row">
+		        <div class="col-sm"><h5>Rounds</h5></div>
+		        <div class="col-sm"><h5>Timer</h5></div>
+		        <div class="col-sm"><h5>Status</h5></div>
+		        <div class="col-sm"><h5>Players</h5></div>
+		        <div class="w-100"></div>
+		        <div id="Rounds" class="col-sm"><h1>1</h1></div> <!-- Rounds -->
+		        <div class="col-sm"><h1>30</h1></div> <!-- Timer -->
+		        <div id="Status" class="col-sm"><h1>basic</h1></div> <!-- Status -->
+		        <div id="usersInGame" class="col-sm"><h1>5</h1></div>
+		    </div>
+
+	  		<div id="PromptCard" class="row justify-content-lg-center justify-content-sm-center">
+	    	<!-- will be produced in the client.js updatePrompt() function -->
+
+	    	<!--
+	    	<div class="col-lg-3 col-sm-5 col-xs-6">
+	        	<div class="card text-white bg-dark">
+	            	<div class="card-body">
+	              		<h5 class="card-title">Kids, I don't need drugs to get high. I'm high on ______________.</h5>
+	            	</div>
+	          	</div>
+	        </div>
+			-->
+	   		</div>
+
+	   		<div id="JudgeSelect"> <!-- displayed during judgestate for judge to see -->
+			<h2> Players are still deciding... </h2>
 			</div>
+
+			<div id="PlayerHand" class="row">
+			<!-- will be produced in the client.js updateHand() function -->
+			
+			<!--
+			
+			<div class="row">
+
+				<div class="card">
+	            	<div class="card-body">
+	              		<h5 class="card-title">Smashmeat</h5>
+	            	</div>
+	          	</div>   
+	        </div>
+
+	        -->     
+		       
 			</div>
 		</div>
+
 
 		<div id="ResetGame">
 			<button type="button" class="btn btn-danger" onclick="resetGame()">Reset Game!</button>
 		</div>
+	</div>
 
 		<div id="usersInGame">
 		</div>
 		
-		<div id="PlayerHand">
-			<!--
-			<h2> Your Hand: Click a card to play: </h2>
-			<button id="card-CSS" onclick="sendCard('<%= userhand[0] %>');">
-				<%= userhand[0] %> </button>
-			-->
-		</div>
-		<canvas id="myCanvas" width="200" height="100"></canvas>
+		
 
-		<div id="JudgeSelect"> <!-- displayed only for the judge -->
-			<h2> It's your turn to be the Judge! </h2>
+		<div id="JudgeSelect"> <!-- displayed at end of round -->
+			<h2> Players are still deciding... </h2>
 		</div>
-
+<!-- @@@@@@@@@@@@@@@@@ Deprecated -->
 	
-	</div>
 </body>
 
 </html>

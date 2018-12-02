@@ -5,44 +5,85 @@ module.exports = class Game {
 
 	constructor() { 
 		
-		this.socket;
+		// Pre-Game Connection and Card Customization information
+		this.connectedPlayers = 0; // Counter of 
+		this.numPlayersReady = []; // Array storing the usernames of those who have pressed 'Ready' for custom card
 
-		//this.onlinePlayersList = {}; //might not be needed
-		this.connectedPlayers = 0;
-		this.numPlayersReady = []; // socket ids of players ready to start game
-
+		// Player & Scoring information
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
 		this.scores = {};
-		this.played = [];
+		this.played = new Set();
 
-		this.PlayerDeck = new Deck('Player');
-		this.PromptDeck = new Deck('Prompt');
+		// Board: Decks and prompt
+		this.PlayerDeck = new Deck('Player'); 
+		this.PromptDeck = new Deck('Prompt'); 
+		this.promptCard; // Single Card object - current card prompt
 		
-		this.promptCard;
-		this.judgeHand = [];
+		// Judge's information
+		this.judgeHand = []; // Array of Cards objects - for the Judge to select
+		this.judgeidx = 0; // index of the current judge
+
+		// Game Status
+		this.winner = null; // Holds the winning player's name
+		this.gameState = 'answer'; // Toggles  between: 'answer' and 'judge' (to indicate the two rounds)
 
 	}
 
-	/* Getters , setters */
+	/* --------------------------------------  Getters , setters ----------------------------------*/
 	getPlayerCount() {
+		/* Returns the count of current players in the game */
 		return this.PlayersList.length;
 	}
 
-	getConnectedCount() {
-		// returns amount of connected players
-		let count = 0;
-		for (let i = 0; i < this.getPlayerCount(); i ++){
-			if (this.PlayersList[i].connection) {
-				count++;
-			}
-		}
-
-		return count;
+	getJudgePlayer() {
+		/* Returns the Player object of the current judge */
+		return this.PlayersList[this.judgeidx];
 	}
 
+	getPlayer(username) {
+		/* Returns the Player object from the username passed in
+
+		Parameters:
+		username (string) username of player you are searching for
+
+		Return
+		The player object of the player if found, else throws an exception
+
+		*/
+		for (let i = 0; i < this.getPlayerCount(); i++) {
+			if (username == this.PlayersList[i].username) {
+				return this.PlayersList[i];
+			}
+		}
+		throw username + " is not a current user in the game! ";
+
+	}
+
+	getGameState() {
+		/* Gets the current game state (a string)
+		   
+		   Two states possible:
+		 * 'answer' // answer phase is when players answer the prompt
+		 * 'judge'  // judge phase is when judge decides
+		*/
+		return this.gameState;
+	}
+
+	/* ---------------------------------------- Boolean Methods -------------------------------------*/
 	isPartofGame(totalOnlinePlayers, socket_id) {
+		/* Function to check if a player (socket_id) is part of the game --> boolean
+
+		Parameters: 
+		totalOnlinePlayers (array of objects: {socket.id:username} (globally defined in server.js)
+		socket_id (string) socket.id of the query
+
+		Returns
+		Boolean : whether not the player's socketid is found in the player
+
+		*/
+
 		let isFound = false;
-		for (var i = 0; i < this.getPlayerCount(); i++) {
+		for (let i = 0; i < this.getPlayerCount(); i++) {
 			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
 				isFound = true;
 				break;
@@ -51,8 +92,61 @@ module.exports = class Game {
 		return isFound;
 	}
 
+	isJudge(username) {
+		/*  Check if the given username is the current judge --> boolean
+
+		Parameters:
+		username (string) username of the user
+
+		Returns
+		Boolean: whether or not the player is the judge
+
+		*/
+		for (let i = 0; i < this.getPlayerCount(); i++ ) {
+			let player = this.PlayersList[i];
+			if (player.username === username) {
+				return player.judge;
+			}
+		}
+
+		throw username + " ain't a valid username in the PlayersList! ";
+
+	}
+
+	hasPlayed(username){
+		/* Check whether player has played yet --> boolean
+		
+		Parameters 
+		username (string)
+
+		Returns:
+		True/ False - set membership
+		*/
+		return this.played.has(username);
+	}
+
+	everyonePlayed(){
+		/* check whether every player has played 
+
+		Returns: 
+		True/False, everyone has played.
+		*/
+		return this.played.size === this.getPlayerCount() - 1;
+	}
+
+	/* ------------------------------ Player Adding / Disconnecting --------------------------------------*/
 	addDisconnectedPlayer(totalOnlinePlayers, socket_id) {
-		for (var i = 0; i < this.getPlayerCount(); i++) {
+		/* Function for reconnecting a player that has disconnected by updating
+
+		Parameters: 
+		totalOnlinePlayers (array of objects: {socket.id:username} (globally defined in server.js)
+		socket_id (string) socket.id of the query
+
+		Returns:
+		void
+
+		*/
+		for (let i = 0; i < this.getPlayerCount(); i++) {
 			if (totalOnlinePlayers[socket_id] == this.PlayersList[i].username) {
 				this.PlayersList[i].socket_id = socket_id;
 				this.PlayersList[i].connection = true;
@@ -61,77 +155,243 @@ module.exports = class Game {
 		}
 	}
 
-	setSocket(socket) {
-		this.socket = socket;
-	}
-
 
 	addPlayer(username, socket_id) {
-		let player = new Player(username = username, socket_id = socket_id )
-		console.log("Adding " + player.username + " to the PlayersList.")
+		/* Adds a player to the current game by constructing a Player() object and pushing it to the end of the PlayerList
+
+		Parameters: 
+		username (string) username
+		socket_id (string) socket.id
+
+		*/
+
+		let player = new Player(username = username, socket_id = socket_id);
+		// console.log("Adding " + player.username + " to the PlayersList.")
 		
 		this.PlayersList.push(player);
-		// this.onlinePlayersList[socket_id] = username; //might not be needed
 	}
 
+	/* ------------------------------- Main Game Logic Functions ---------------------------------- */
 
-	initGame(n = 5) {
+	initGame(n = 6) {
+		/* Initializes the game by:
+		 * 1) Drawing n cards for each player in this.PlayersList
+		 * 2) Initializing the scoreboard of every player in this.PlayersList
+		 * 3) Dealing the Prompt Card for everyone to see
+		 * 4) Setting the first player as the judge
+
+		 Parameters:
+		 n (int) number of cards to deal for each player. Default value 5
+
+		 Return:
+		 void
+
+		 */
 
 		console.log("Initializing Game with " + this.getPlayerCount() + " player(s) ");
 
-		// Draw n cards for each player
+		// 1) Draw n cards for each player
 		this.PlayersList.map( player => player.drawCards(this.PlayerDeck, n));
 		
-		this.dealPromptCard();
-
-		// Initialize Scores
+		// 2) Initialize Scores
 		for (let i = 0; i < this.PlayersList.length; i++) {
-			let key = this.PlayersList[i].username
+			let key = this.PlayersList[i].username;
 			this.scores[key] = 0;
 		}
 
+		// 3)  Dealing prompt 
+		this.dealPromptCard();
+
+		// 4) set First player in the list as the initial judge
+		this.PlayersList[0].judge  = true;
 
 	}
 
 	dealPromptCard() {
+		/* Deals the prompt card from the prompt Deck */
 		this.promptCard = this.PromptDeck.drawCard();
 	}
 
-	cardPlayed(card_idx, player) {
+	buildSentence(idx) {
+		/* builds the complete Prompt + answer 
+		 Parameters:
+		 idx (int) index of the Card object on the winning answer (from the Judge Hand) 
+
+		 Return
+		 completed_text (string) : the string built from combining prompt and answer */
+
+		 
+		 let prompt_text = this.promptCard.value;
+		 let answer_text =  this.judgeHand[idx].value;
+		 
+		 let pattern = /[_]+/;
+		 let completed_text;
+		 
+		 let match_found = pattern.test(prompt_text);
+		 
+		 if (match_found) {
+		 	completed_text = prompt_text.replace(pattern, answer_text);
+		 } else {
+		 	completed_text = `${prompt_text} ${answer_text}`;
+		 }
+
+		 return completed_text
+
+	}
+
+	newJudge() {
+		/* Rotates to next judge, and updating the judge.idx by:
+		 * 1) Current judge is no longer judge, and incrementing it to the next judge
+		 * 2) Dealing with rotation (modulus)
+		 * 3) Assigning judge to the next Player
+
+		*/
+		this.PlayersList[this.judgeidx++].judge = false; // 1 
+		this.judgeidx %= this.getPlayerCount(); // 2
+		this.PlayersList[this.judgeidx].judge = true; // 3
+
+		console.log(`The new judge is now: ${this.PlayersList[this.judgeidx]}`);
+	}
+
+
+	cardPlayed(card_idx, username) {
+		/* A player (candidate) has played a card to send to the judge to decide by: 
+		 * 1) Getting the Player object of the player who played the card
+		 * 2) Invoking Player.playCard() method on the player with the card index (card_idx)
+		 * 3) Pushing the Card object played to the judgeHand 
+
+		Parameters:
+		card_idx (int) A value between 0 - 4 for a 5-card hand 
+		player (string) The username of the player
+
+		Returns:
+		void 
+
+		*/ 
+		//1)
+		let card_player = this.getPlayer(username);
+		//2)
+		let played_card = card_player.playCard(card_idx, this.PlayerDeck);
 		
-		let player_index = null;
-		// Iterate through entier PlayersList to get the index of player
-		for (let i = 0; i < this.PlayersList.length; i++) {
-			
-			console.log(this.PlayersList[i].username);
-			
-			if (player === this.PlayersList[i].username) {
-				player_index = i;
-			}
-		}
-		if (player_index === null) {
-			throw player + " could not be found in the table. Please see cardPlayed() func in game.js"
-		}
-
-		let played_card = this.PlayersList[player_index].playCard(card_idx, this.PlayerDeck);
+		//3)
+		console.log("Played card is: " , played_card);
 		this.judgeHand.push(played_card);
-
-	}
-
-	resetTable() {
-        this.PlayerDeck = new Deck("Player");
-        this.PromptDeck = new Deck("Prompt");
-
-        this.promptCard;
-        this.handCards = {};
-        this.tableCards = {};
-    }
-
-	endRound(data) {
+		this.played.add(username);
 
 	}
 
 
+	switchAnswerState(winner) {
+		/* Ends the current judging phase and switches to Answering phase  
+		 * 1) Reset who has played a card in the round, the judge's pile
+		 * 2) Deal a new prompt (black card) and find a new judge
+		 * 3) Update the scores
+		 * 4) Set the current state to 'answer'
+		
+		Parameters:
+		winner (string) username of the winner of that round
+
+		Returns:
+		void
+
+		*/
+		// 1)
+		console.log("called switchAnswerState(). BEFORE: --{", this.played, "}--.");
+		this.played.clear(); 
+		console.log("AFTER: --{", this.played, "}--");
+		console.log("judge hand BEFORE --{", this.judgeHand), "}--";
+		this.judgeHand = [];
+		console.log("judge hand AFTER --{", this.judgeHand, "}--");
+
+
+		// 2)
+		this.dealPromptCard();
+		this.newJudge();
+
+		// 3)
+		if (this._updateScoresAndCheckWinner(winner)) {
+			this.endGame(winner);
+		}
+
+		// 4
+		if (this.gameState == 'judge') {
+			this.gameState == 'answer';
+			console.log(`SWAPPED TO GAMESTATE: ANSWER`);
+
+			let entries = [];
+			for (let item of this.played.keys()) entries.push(item);
+
+			console.log(`Played is ${entries} JudgeHand is ${this.judgeHand.length}`);
+
+		} else if (this.gameState === 'answer') {
+			throw `Error! Looks like gamestate is already in answer`;
+		} else {
+			throw `Error! ${this.gameState} is not a valid gamestate`;
+		}
+	}
+
+	switchJudgeState() {
+		/* Ends the current answering phase and switches to Judging phase
+		 * 1) Checks if the judgeHand has correct amount of cards
+		 * 2) Set the current state to 'judge'
+		
+		*/
+
+		 // 1)
+		 if (this.judgeHand.length != this.getPlayerCount() - 1) {
+		 	throw `Oops! There's something wrong with the judgeHand: ${this.judgeHand}`
+		 }
+
+		 // 2) 
+		 this.gameState = 'judge';
+		 console.log("SWAPPED TO GAMESTATE: JUDGING")
+	}
+	
+	_updateScoresAndCheckWinner(username) { 
+		/* Private method to update scores, and then check if that player is a winner.
+		 
+		Parameters:
+		username (string) : username of the player to increment score
+
+		Return:
+		Boolean : whether or not that player's score who we just updated just won
+		 */
+		this.scores[username] += 1;
+		const WINNING_SCORE = 10;
+
+		return this.scores[username] == WINNING_SCORE;
+	}
+
+	endGame(winner) {
+		/* Ends the game 
+
+		Parameters:
+		winner (string) username of the winning player
+		
+		*/
+		console.log(`${winner} is the winner of the game!`);
+		this.winner = winner;
+	}
+
+	toString() {
+
+		return `<game object>
+		Players List: ${this.PlayersList}
+		Scores: ${this.scores.toString()}
+		Played: ${this.played.toString()}
+
+		Decks:
+		${this.PlayerDeck.toString()}
+		${this.PromptDeck.toString()}
+
+		Prompt: ${this.promptCard}
+		Judge Hand: ${this.judgeHand}
+		Current Judge: ${this.getJudgePlayer()}
+
+		Game State: ${this.gameState}
+		Winner? : ${this.winner}
+		`
+	}
 }
 
 

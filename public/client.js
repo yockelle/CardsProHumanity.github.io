@@ -1,22 +1,20 @@
-/* -------------
-Client side JS file
+"use strict"
 
- -----------------*/
-
-// initialize socket connection. Should only do this once
+/* -------- Global Variables for the client  ----------- */
 var socket = io();
 
-// Store username & socketid client side 
-var user = {
+var client = {
 	username: "null",
 	socket_id: "null"
 }
 
-/* ---------- User Registration ---------- */
+
+/* --------------------------------------- Button-click functions  ------------------------------------------------- */
+// We could make a seperate file for this called button.js and pass in socket as a paramater
 function userRegister() {
-
+	// Emitted on 'Register' button click
+	
 	console.log('Sending Registration Data to Server');
-
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
 
@@ -35,62 +33,11 @@ function userRegister() {
 
 		alert("Username and/Or Password Cannot be blank!")
 	}
-
-} // end of userRegister
-
-// Registration Listen
-socket.on('Registration_Status', function (data) {
-	alert(data);
-	console.log('Received' + data);
-});
-
-// Online_Players_list Listen
-socket.on('Online_Players_List', function (data, num_players_g1) {
-
-	/* <ul id="sortable">
-		<li>
-			<div class="media">
-				<div class="media-left align-self-center">
-					<img class="rounded-circle" src="/public/Player_Avatar.jpg">
-				</div>
-				<div class="media-body">
-					<h4>Bob1123</h4>
-					<p>SocketID: aDEFA123</p>
-				</div>
-			</div>
-		</li>
-	</ul> */
-	let k = ('<ul id="sortable">');
-	for (key in data) {
-		console.log("Current Players:", "SocketID: ", key, "UserName: ", data[key])
-
-		k += ('<li>' +
-			'<div class="media">' +
-			'<div class="media-left align-self-center">' +
-			'<img class="rounded-circle" src="/public/Player_Avatar.jpg">' +
-			'</div>' +
-			'<div class="media-body">');
-		k += ('<h4>'+ data[key] + '</h4>');
-		k += ('<p>SocketID: '+ key + '</p>');
-		k += ('</div></div></li>');
-	};
-	k += '</ul>';
-	document.getElementById('PlayerList').innerHTML = k;
-
-	let num_g1 = ('<p id="num_players_g1">Current Players: ' + num_players_g1 + '</p>');
-	document.getElementById("num_players_g1").innerHTML = num_g1;
-});
-
-socket.on('Disconnected_Player', function() {
-		let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="continueGame()">Continue</a>');
-		document.getElementById("join_g1").innerHTML = html;
-		document.getElementById("start_g1").style.display = "none";
-})
-
-/* ----------- User Login ----------- */
+}; 
 function userLogin() {
+	// Emitted on 'Login' button click
 	
-	// console.log('Sending user login info to server');
+	console.log('Sending user login info to server');
 	var inputname = document.getElementById('inputname').value;
 	var inputpass = document.getElementById('inputpass').value;
 
@@ -108,56 +55,65 @@ function userLogin() {
 	
 	} else {
 		alert("Username and/Or Password Cannot be blank!")
-	}
-}
+	} 
+}; 
 
-// Login Status listen
-socket.on('Login_Status', function (data) {
-	alert(data.message);
-	console.log('Login Status: ' + data.message);
-	if (data.success) {
-		document.getElementById("Lobby").style.display = "block";
-		document.getElementById("LoginForm").style.display = "none";
-
-		// will also update the global user
-		user['username'] = data.username;
-		user['socket_id'] = socket.id;
-		console.log("Succesful login: " + user['username'], user['socket_id']);
-	}
-});
-
-
-
-/* ---------- Game Start --------- */
 function joinGameOne() {
+	// Emitted on 'Join' button click
 	socket.emit("joinGameOne");
 }
 
 function initGame() {
-	// Emitted upon 'Start' button click
+	// Emitted on 'Start' button click
 	socket.emit("initGame", true);
 }
 
 function continueGame() {
+	// Emitted on 'Continue' button click
 	socket.emit("continueGame");
 }
 
-socket.on('customCards', function (status, message) {
-	if (status) {
-		console.log(message);
+function sendCard(card_idx, option) { 
+	/* Emited upon clicking any card - either as an answer (from the candidates) or as a winner (selected by Judge).
+	 * Paramters:
+	 card_idx (int) value between 0 - 5 (or the length of their hand) signifying the index of the card
+	 option (string) either 'candidate' or 'judge'
+	 * Emits:
+	  Emits to the server the card_idx, and option as 'cardPlayed'
+	*/
 
-		// Go to custom card screen.
-		document.getElementById("Lobby").style.display = "none";
-		document.getElementById("LoginForm").style.display = "none";
-		document.getElementById("CustomCards").style.display = "block";
-	} else {
-		console.log('error not received.');
+	var data = {
+		card_idx: card_idx,
+		username: client.username, // username will keep track of who sent the card 
+		socket_id: client.socket_id
 	}
-});
 
-/*-----------Create custom cards--------*/
-var cardNum = 1; //Keeps track of new cards entered by user
-var cardsToAdd = []; //Array to hold new cards user enters
+	console.log('Sending the card ' + data.card_idx + ' to Server from ' + data.username, data.socket_id);
+
+	socket.emit('cardPlayed', data, option);
+	
+}
+function resetGame() {
+	// Emited on 'Reset' button click
+	console.log("Resetting Game Button Pressed. Sending Request to Server");
+	socket.emit('ResetGameButtonPressed') //sending request to server to reset game
+}
+
+function pingServer() {
+	/* Debugging button to ping the server with the socket's ID */
+	socket.emit('pingServer', socket.id);
+}
+
+/* ------------------------------------ Card Creation Functions ------------------------------------ */
+var cardNum = 1; // Keeps track of new cards entered by user
+var cardsToAdd = []; // Array to hold new cards user enters
+
+//Turns off lobby and login divs and turns on CustomCard div
+function cardCreator() {
+	document.getElementById("Lobby").style.display = "none";
+	document.getElementById("LoginForm").style.display = "none";
+	document.getElementById("CustomCards").style.display = "block";
+}	
 
 //Executes when user clicks Add New Card. Adds the input to cardsToAdd array and displays card to user
 function addNewCardButton() {
@@ -185,53 +141,143 @@ function resetCardInputScreen() {
 
 //When user clicks Finish, the array of new user cards will send to server and call initGame()
 var emitNewCards = function() {
-	console.log("Sending cards to server.");
+	console.log("Sending cards to server. ");
 	socket.emit("newUserCards",cardsToAdd);
 
-
-	let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>')
+	let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>')		
 	document.getElementById("send_cards").outerHTML = html;
 }
 
-// Start the game
-socket.on('game_start', function (playerHands, message) {
-	if (playerHands) {
+
+/* --------------------------------------------Socket.IO code : Client Listens -----------------------------------------------------------------------------------*/
+
+// Login Page
+socket.on('Registration_Status', registrationStatus);
+socket.on('Login_Status', loginStatus);
+socket.on('Disconnected_Player', disconnectedPlayer);
+
+// Lobby Page
+socket.on('Online_Players_List', onlinePlayersList);
+socket.on('game_start', game_start);
+
+// Game Page - HTML updates
+socket.on('updatePlayerScores', updatePlayerScores);
+socket.on('updateHand', updateHand); // calls updateHand with clickable = true
+socket.on('updatePrompt', updatePrompt);
+
+
+// Judge Rotation Display Toggling
+socket.on('startJudgeRound', startJudgeRound);
+socket.on('endJudgeRound', endJudgeRound); 
+
+// Custom Cards
+socket.on('customCards', customCards)
+
+// Reset Button
+socket.on('reset_current_game', reset_current_game);
+
+/* -------------------------------------- Socket.IO code:  Socket functions  ------------------------------------- */
+
+function registrationStatus(data) {
+	alert(data);
+	console.log('Received registration info: ' + data);
+};
+
+function loginStatus(data) {
+	alert(data.message);
+	console.log('Login Status: ' + data.message);
+	if (data.success) {
+		document.getElementById("Lobby").style.display = "block";
+		document.getElementById("LoginForm").style.display = "none";
+
+		// will also update the global client
+		client['username'] = data.username;
+		client['socket_id'] = socket.id;
+		console.log("Succesful login: " + client['username'], client['socket_id']);
+	}
+};
+
+function disconnectedPlayer(){
+	/* Creates a 'Continue' button for the disconnected player */
+	let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="continueGame()">Continue</a>');
+	document.getElementById("join_g1").innerHTML = html;
+	document.getElementById("start_g1").style.display = "none";
+}
+
+
+function onlinePlayersList(data, num_players_g1) {
+	// Updates the players currently online: HTML template looks like this:
+	/* <ul id="sortable">
+		<li>
+			<div class="media">
+				<div class="media-left align-self-center">
+					<img class="rounded-circle" src="/public/Player_Avatar.jpg">
+				</div>
+				<div class="media-body">
+					<h4>Bob1123</h4>
+					<p>SocketID: aDEFA123</p>
+				</div>
+			</div>
+		</li>
+	</ul> */
+	let k = ('<ul id="sortable">');
+	for (let key in data) {
+		// console.log("Current Players:", "SocketID: ", key, "UserName: ", data[key])
+
+		k += ('<li>' +
+			'<div class="media">' +
+			'<div class="media-left align-self-center">' +
+			'<img class="rounded-circle" src="/public/Player_Avatar.jpg">' +
+			'</div>' +
+			'<div class="media-body">');
+		k += ('<h4>'+ data[key] + '</h4>');
+		k += ('<p>SocketID: '+ key + '</p>'); // orig <p> and </p>
+		k += ('</div></div></li>');
+	};
+	k += '</ul>';
+	document.getElementById('PlayerList').innerHTML = k;
+
+	let num_g1 = ('<p id="num_players_g1">Current Players: ' + num_players_g1 + '</p>');
+	document.getElementById("num_players_g1").innerHTML = num_g1;
+};
+
+function game_start(canStart, message) {
+	if (canStart) {
 		console.log(message);
-		// Turn off Custom Card div
+		
+		// Turn off lobby, login form, custm card div
 		document.getElementById("Lobby").style.display = "none";
 		document.getElementById("LoginForm").style.display = "none";
 		document.getElementById("CustomCards").style.display = "none";
 
-		// Turn on Game div
+		// Turn on  Game div
 		document.getElementById("Game").style.display = "block";
 		document.getElementById("PlayerHand").style.display = "block";
 		document.getElementById("usersInGame").style.display = "block";
 	} else {
 		alert(message);
 	}
-});
+}
 
+function updatePlayerScores(playersList, scores) {
 
-/* ----------- GAME LOGIC functions ----------- */
-
-/* ----- HTML updating ----- */ 
-socket.on('updatePlayersInGame', updatePlayersInGame)
-
-function updatePlayersInGame(playersList) {
-
+	console.log("updating playerscores", scores);
 	// Function to update the HTML 
-	let k = ('<h3> Players In Game: </h3> ') ;
+	let k = ('<h3> Player Scores </h3> ') ;
 	
 	for (let i = 0; i < playersList.length; i++) {
 		
-		if (playersList[i].judge) {
-			
+		let player = playersList[i];
+		let username = player.username;
+
+		if (player.judge) {
+			 
 			k += '<font color="red">' 
-			 	+ playersList[i].username 
+			 	+ "Judge: " + username + " { " + scores[username] + " } "
 			 	+ '</font>';			
 		} else {
 			k += '<small> '
-				+ playersList[i].username
+				+ player.username + " { " + scores[username] + " } ";
 				+ '</small>'
 		};
 	};
@@ -239,44 +285,195 @@ function updatePlayersInGame(playersList) {
 	document.getElementById('usersInGame').innerHTML = k;
 };
 
-/* ----- Player Hand ----- */
-socket.on('updateHand', function updateHand(new_hand) {
+function updateHand(new_hand) {
+	/* update client's hand with the new array of the hand
+	Parameter:
+	new_hand : Array of card object
+	clickable : boolean - whether or not you want the cards to be clickable
+	*/
 	console.log("updating hand");
-	
-	let k = ('<h3> Current Hand: Click a card to play </h3>');
+
+	let handhtml = `<div class="row">
+						<div class="card-deck">`; // Parent Div
+
+
+	// Produce the cards
 	for (let i = 0; i < new_hand.length; i++) {
-		k += '<button id="card-CSS" onclick="sendCard(' + i + ')"> ' + new_hand[i].id + ' </button>"'
+	
+		handhtml += (`<div class="card"> 
+				<div class="card-body" >
+				   <h5 class="card-title">${new_hand[i].value}</h5>
+				   <button id="cardbutton" onclick="sendCard(${i}, 'candidate')"> submit </button>
+				</div>
+			   </div>`);
+		if (i==2) {
+			handhtml += `<div class="w-100"></div>`; // add spacing after the third card
+		}
 	};
 
-	document.getElementById('PlayerHand').innerHTML = k;
-});
+	handhtml += 	`</div>
+	 			</div>`; // Close Parent Div
 
-/* ----- Judge Hand ------ */
-socket.on('judge', function judgemode(judge_hand) {
-	console.log(" You are judge! ");
-	document.getElementById('PlayerHand').style.display = "none"; // instead of hiding display, we can just disable buttons
+	
+	document.getElementById('PlayerHand').innerHTML = handhtml;
+};
+
+function updatePrompt(prompt_msg) {
+	// update the prompt card with the prompt msg (just a string)
+	console.log(`updating the prompt ${prompt_msg}`);
+
+	let promptHTML = `<div class="col-lg-3 col-sm-5 col-xs-6">
+						 <div class="card text-white bg-dark">
+						 	<div class="card-body">
+						  		<h5 class="card-title"> ${prompt_msg} </h5>
+						  	</div>
+						  </div>
+						</div>`
+
+	document.getElementById('PromptCard').innerHTML = promptHTML;
+}
+
+function startJudgeRound(judge_hand, judge) {
+	/* Function for socket.on('startJudgeRound')
+	 * Parameters:
+		judge_hand (array of Card objects) - in the order that they were pushed
+		judge (Player object) - the judge player 
+	 * Updates the HTML :
+	  1) Players don't see their hands anymore, and only see what the Judge must select
+	  2) If the client is a judge, make the cards be displayed with buttons
+	  3) If the client is not a judge, make the cards be displaeyd without buttons
+	  4) change the HTML
+
+	 */
+	
+	console.log("Received from startJudgeRound:" + judge_hand);
+
+	// 1) Hide their hands, display the Judge's possible selections
+	document.getElementById('PlayerHand').style.display = "none"; 
 	document.getElementById('JudgeSelect').style.display = "block";
-
-});
-
-/* ------ Card Played ----- */ 
-socket.on('cardPlayed', function cardPlayed(data) {
-
-	console.log("Received a card being played from: " + data.username);
-
-	let cardid = data.cardid;
 	
 
+	let html;
+	let clientIsJudge = (client['username'] === judge.username);
+	
+	// 2) Client is a judge - the caards displayed can be clicked
+	if (clientIsJudge) { 
+		
+		html = '<h3> Pick your favourite card for this round! </h3> '
+		html += `<div class="row">`  // parent div
 
-});
+		for (let i = 0; i < judge_hand.length; i++) {
 
-/* ------ Resetting Game - Moving Everyone Back to Lobby and Resetting Game ----- */ 
-socket.on('reset_current_game', function resetgame(user) {
+			let args = `${i},'winner'`; // sendCard(i , 'winner') 
+			
+			html += `<div class="card">
+	            		<div class="card-body">
+	              			<h5 class="card-title"> ${judge_hand[i]['value']} </h5>
+	              			<button id="cardbutton" onclick="sendCard(${args})"> This is the best one </button>
+	            		</div>
+	          		</div>` 
+		}
+
+		html += `</div>` // closing parent div
+
+	// 3) client isn't a judge - the card displayed cannot be clicked
+	} else { // if client is NOT judge, display the cards without button click
+		
+		html  = '<h3> Judge ' + judge.username + ' is currently deciding: ';
+		html += `<div class="row">`  // parent div
+
+		for (let i = 0; i < judge_hand.length; i++) {
+
+			let args = `${i},'winner'`; // sendCard(i , 'winner') 
+			
+			html += `<div class="card">
+	            		<div class="card-body">
+	              			<h5 class="card-title"> ${judge_hand[i]['value']} </h5>
+	            		</div>
+	          		</div>` 
+		}
+
+		html += `</div>` // closing parent div
+	};
+
+	// 4)
+	document.getElementById('JudgeSelect').innerHTML = html;
+};
+
+
+function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores, winner) {
+	/* ends the current round. 
+	 * Parameters:
+	  old_judge (Player object)
+	  new_judge (Player object)
+	  new_prompt (Card object)
+	  playersList (array of Player objects)
+	  scores (hashmap. {username (string) : score (int) } )
+	  winner (JSON object with { user (String) , completed_text (string)} )
+		
+	  * HTML changes
+	  1) Alerts everyone the winner of that round + the completed text (combined prompt + answer)
+	  2) 
+	  3) Alerts the old judge and new judge, and fix their HTML accordingly
+	  
+	*/
+	console.log("judge round ended: Client is: ",  client['username'], ` old: ${old_judge.username}, new: ${new_judge.username}`);
+	
+	let winning_user = winner['user'];
+	let completed_text = winner['completed_text'];
+
+	// 1) Update with New Prompt
+	updatePrompt(new_prompt);
+
+	// 2) Alert old and new judge Rotate to the next Judge
+	if (client['username'] == old_judge.username) {
+		
+		alert(" You are no longer judge, this round you pick a card! ")
+		
+		document.getElementById('JudgeSelect').style.display = "none";
+		document.getElementById('PlayerHand').style.display = "block"; 
+
+	}
+	else if (client['username'] == new_judge.username) {
+		
+		alert(`${winning_user} has won the round! ${completed_text}`);
+
+		alert(" You are now the judge for the next round! ")
+
+		document.getElementById('PlayerHand').style.display = "none";
+		document.getElementById('JudgeSelect').innerHTML = "<h2> Players are still deciding... </h2>"
+	
+	} else { //every other player (that wasn't a judge or isn't a judge)
+		alert(`${winning_user} has won the round! ${completed_text}`);
+		document.getElementById('JudgeSelect').style.display = "none";
+	}
+
+	// Update the ScoreBoard HTML
+	updatePlayerScores(playersList, scores);
+
+
+};
+
+
+
+function customCards(status, message) {
+	if (status) {
+		console.log(message);
+ 		// Go to custom card screen.
+		document.getElementById("Lobby").style.display = "none";
+		document.getElementById("LoginForm").style.display = "none";
+		document.getElementById("CustomCards").style.display = "block";
+	} else {
+		console.log('error not received.');
+	}
+};
+
+// Resetting Game - Moving Everyone Back to Lobby and Resetting Game
+function reset_current_game(user) {
 
 	console.log("Resetting Game");
 	alert('Game Reset Initialized by User: ' + user);
-
-	// Turn on lobby div
+ 	// Turn on lobby div
 	document.getElementById("Lobby").style.display = "block";
 	
 	// Turn off  Game div
@@ -284,7 +481,7 @@ socket.on('reset_current_game', function resetgame(user) {
 	document.getElementById("PlayerHand").style.display = "none";
 	document.getElementById("usersInGame").style.display = "none";
 
-	//Reset Custom Card Page:
+	// Reset Custom Card Page:
 	let html = `<div id="CustomCards">` +
 	`<p>First things first, add your personalized cards. These could be the names of the players, some places in your local area, or things or people that feature in your "in" jokes. Remember, they need to be people or things (tangible or abstract) and you can add up to 20. Add your first one below followed by Add New Card and click Finished when you've entered your last.</p>` +
 	`<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>` +
@@ -292,29 +489,6 @@ socket.on('reset_current_game', function resetgame(user) {
 	`<div id="displayCardsEntered"></div><br>` + 
 	`<button id="send_cards" class="button" onclick="emitNewCards()">Finished</button><br>` +
 	`</div>`
-	document.getElementById("CustomCards").outerHTML = html;	
+	document.getElementById("CustomCards").outerHTML = html;
+};
 
-});
-
-
-
-function sendCard(card_idx) {
-
-	// Sends card_played
-
-	var data = {
-		card_idx: card_idx,
-		username: user.username,
-		socket_id: user.socket_id
-	}
-
-	console.log('Sending the card ' + data.card_id + ' to Server');
-	socket.emit('cardPlayed', data);
-
-}
-
-//Activates when user pressed the reset game button in the game div
-function resetGame() {
-	console.log("Resetting Game Button Pressed. Sending Request to Server");
-	socket.emit('ResetGameButtonPressed') //sending request to server to reset game
-}
