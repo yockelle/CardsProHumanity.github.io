@@ -49,9 +49,36 @@ html, body {
 }
 */
 
-.container {
+#Game {
+    background-color: #e3e3e3;
+    font-family: 'Roboto', sans-serif;
+    width: 100%;
+    height: 100%;
+    position:absolute;
+}
+
+#Game h5, h1 {
+    font-weight: 700;
+    color: red;
+}
+
+#Game p {
+    color: blue;
+}
+
+.card {
+margin-top: 25px;
+border-radius: 10px;
+height: 350px;
+}
+
+.bg-dark {
+background-color: black!important;
+}
+
+#Game .container {
     padding: 2px 16px;
-    background-color: gray;
+    background-color: #e3e3e3;
     color: white;
 }
 
