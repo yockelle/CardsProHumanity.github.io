@@ -9,6 +9,7 @@ module.exports = class Game {
 		// Pre-Game Connection and Card Customization information
 		this.connectedPlayers = 0; // Counts the number of players actively connected to game
 		this.numPlayersReady = []; // Array storing the usernames of those who have pressed 'Ready' for custom card
+		this.gameOpen = true; // Boolean stating whether game is open or closed to join, preventing users from joining midgame
 
 		// Player & Scoring information
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
@@ -62,7 +63,6 @@ module.exports = class Game {
 			}
 		}
 		throw username + " is not a current user in the game! ";
-
 	}
 
 	getGameState() {
@@ -73,6 +73,13 @@ module.exports = class Game {
 		 * 'judge'  // judge phase is when judge decides
 		*/
 		return this.gameState;
+	}
+
+	gameClose() {
+		/*
+			Changes the boolean gameOpen to false
+		*/
+		this.gameOpen = false;
 	}
 
 	/* ---------------------------------------- Boolean Methods -------------------------------------*/
@@ -96,6 +103,17 @@ module.exports = class Game {
 			}
 		}
 		return isFound;
+	}
+
+	isGameOpen() {
+		/*
+			Returns whether a game is open or closed
+		*/
+		if (this.gameOpen == true) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	isDisconnected() {
