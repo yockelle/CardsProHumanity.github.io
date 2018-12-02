@@ -226,13 +226,18 @@ function disconnect(socket) {
 };
 
 function newUserCards(socket, newPlayerCards) {
-	
-	var file = fs.createWriteStream(__dirname + 'Classes/array.txt');
-	file.on('error', function(err) { /* error handling !!!!!!!!!!!*/ });
-	newPlayerCards.forEach(function(v) { file.write(v + '\n'); });
-	file.end();
-
-	table.playerReadyCustomCards(socket);
+	// Append new cards to file
+	let username = totalOnlinePlayers[socket.id];
+	if (table.isPlayerReadyCustomCards(username)) {
+		for (var i = 0; i < newPlayerCards.length ; i++) {
+			fs.appendFile('Classes/array.txt', newPlayerCards[i] + "\n", function (err) {
+				if (err) throw err;
+			});
+		}
+		console.log('Cards added!');
+	} else {
+		console.log('You are already ready and can\'t add more cards!');
+	}
 
  	if (table.isTableReadyCustomCards()) {
 		table.initGame();

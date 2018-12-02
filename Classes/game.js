@@ -1,5 +1,6 @@
 const Player = require('./Player');
 const Deck = require('./Deck');
+const fs = require('fs'); 
 
 module.exports = class Game {
 
@@ -27,6 +28,11 @@ module.exports = class Game {
 		this.winner = null; // Holds the winning player's name
 		this.gameState = 'answer'; // Toggles  between: 'answer' and 'judge' (to indicate the two rounds)
 
+		// Create new custom cards file
+		fs.open('Classes/array.txt', 'w', function (err, file) {
+			if (err) throw err;
+			console.log('Classes/array.txt was created for custom cards');
+		});
 	}
 
 	/* --------------------------------------  Getters , setters ----------------------------------*/
@@ -69,19 +75,6 @@ module.exports = class Game {
 		return this.gameState;
 	}
 
-	playerReadyCustomCards(socket) {
-		/*
-			Input the player's socket id
-
-			If not already in array, adds player to array to denote ready status
-		*/
-		if (!(this.numPlayersReady.includes(socket))) {
-			this.numPlayersReady.push(socket);
-			console.log("Player is ready");
-		}
-	}
-
-
 	/* ---------------------------------------- Boolean Methods -------------------------------------*/
 	isPartofGame(totalOnlinePlayers, socket_id) {
 		/* Function to check if a player (socket_id) is part of the game --> boolean
@@ -112,6 +105,21 @@ module.exports = class Game {
 			Boolean: whether there is a disconnection or not
 		*/
 		if (this.connectedPlayers != this.getPlayerCount()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	isPlayerReadyCustomCards(username) {
+		/*
+			Input the player's socket id
+
+			If not already in array, adds player to array to denote ready status
+		*/
+		if (!(this.numPlayersReady.includes(username))) {
+			this.numPlayersReady.push(username);
+			console.log("Player is ready");
 			return true;
 		} else {
 			return false;
