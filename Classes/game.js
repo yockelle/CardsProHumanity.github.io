@@ -196,7 +196,9 @@ module.exports = class Game {
 		Returns: 
 		True/False, everyone has played.
 		*/
-		return this.played.size === this.getPlayerCount() - 1;
+
+		console.log(`Called everyonePlayed() size: ${this.size} ==  count: ${this.getPlayerCount() - 1}`)
+		return this.played.size === (this.getPlayerCount() - 1);
 	}
 
 	/* ------------------------------ Player Adding / Disconnecting --------------------------------------*/
@@ -361,13 +363,8 @@ module.exports = class Game {
 
 		*/
 		// 1)
-		console.log("called switchAnswerState(). BEFORE: --{", this.played, "}--.");
 		this.played.clear(); 
-		console.log("AFTER: --{", this.played, "}--");
-		console.log("judge hand BEFORE --{", this.judgeHand), "}--";
 		this.judgeHand = [];
-		console.log("judge hand AFTER --{", this.judgeHand, "}--");
-
 
 		// 2)
 		this.dealPromptCard();
@@ -380,13 +377,15 @@ module.exports = class Game {
 
 		// 4
 		if (this.gameState == 'judge') {
-			this.gameState == 'answer';
-			console.log(`SWAPPED TO GAMESTATE: ANSWER`);
+			
+			this.gameState = 'answer';
+			console.log(`swapped to gamestate: ${this.gameState} <-- should say answer `);
 
+			/* This section is just for debugging
 			let entries = [];
 			for (let item of this.played.keys()) entries.push(item);
-
 			console.log(`Played is ${entries} JudgeHand is ${this.judgeHand.length}`);
+			*/
 
 		} else if (this.gameState === 'answer') {
 			throw `Error! Looks like gamestate is already in answer`;
@@ -409,7 +408,7 @@ module.exports = class Game {
 
 		 // 2) 
 		 this.gameState = 'judge';
-		 console.log("SWAPPED TO GAMESTATE: JUDGING")
+		 console.log(`SWAPPED TO GAMESTATE: ${this.gameState}, <-- should say judge`)
 	}
 	
 	_updateScoresAndCheckWinner(username) { 

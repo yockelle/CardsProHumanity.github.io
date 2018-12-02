@@ -383,9 +383,12 @@ function cardPlayed(socket, data, option) {
 			table.cardPlayed(data.card_idx, data.username);
 			
 			// 2) Emission from server to tell client to highlight the card (in HTML) to signify disabled button
-			socket.emit('disableAnswers', data['card_idx']); // Disable the buttons
+			// TODO: socket.emit('disableAnswers', data['card_idx']); // Disable the buttons
 
 			// 3) Check if everyone else has played 
+			console.log("Everyone played?", table.everyonePlayed(), table.played.toString());
+			console.log("Gamestate is: ", table.getGameState());
+
 			if (table.everyonePlayed() && (table.getGameState() === 'answer')) {
 				console.log(`Everyone has played, emitting the judgehand for all to see: ${table.judgeHand}`);
 
@@ -398,7 +401,7 @@ function cardPlayed(socket, data, option) {
 				io.to(judge.socket_id).emit('showJudgeDisplay', table.judgeHand); // show Judge HTML to the judge
 				
 			} else {
-				console.log(`Those who played: ${table.played}. Waiting for ${table.getPlayerCount()-1} total to play`);
+				console.log(`Those who played: ${table.played.length}. Waiting for ${table.getPlayerCount()-1} total to play`);
 			}
 		} else { // Reject the card they are trying to answer with if they are a judge or they've already played
 			console.log("Card rejected from: " + data.username + " " + data.card_idx);
