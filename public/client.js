@@ -5,7 +5,7 @@ var socket = io();
 
 var client = {
 	username: "null",
-	socket_id: "null"
+	socket_id: "null",
 }
 
 
@@ -252,17 +252,71 @@ function game_start(canStart, message) {
 
 		// Turn on  Game div
 		document.getElementById("Game").style.display = "block";
+		
 		document.getElementById("PlayerHand").style.display = "block";
 		document.getElementById("usersInGame").style.display = "block";
+
+		//set username inside game div to players username
+		//<div id="currentUser" class="col-sm"><h1>'PlaceHolder For Username'</h1></div>
+		document.getElementById('currentUser').innerHTML = `<h1>${client.username}</h1>`;
+
 	} else {
 		alert(message);
 	}
+}
+
+function updateGameStyling(playerIsJudge) {
+
+	//customize players view depending if they are judge vs reg player
+	if (playerIsJudge) {
+		document.getElementById('Status').innerHTML = `<h1>Judge</h1>`;
+		document.getElementById("Game").style.backgroundColor = "black";
+		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = "black";
+		document.body.style.backgroundColor = "black";
+		document.documentElement.style.backgroundColor = "black";
+
+	} else {
+		document.getElementById('Status').innerHTML = `<h1>Basic</h1>`;
+		document.getElementById("Game").style.backgroundColor = "#2e2c2c";
+		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = "#2e2c2c";
+		document.body.style.backgroundColor = "#2e2c2c";
+		document.documentElement.style.backgroundColor = "#2e2c2c";
+	}
+
+}
+
+function startTimer() {
+	var seconds = 30;
+	var timer = document.getElementById('Timer');
+
+	//reset to 30
+	timer.innerHTML = `<h1>30</h1>`;
+
+	//every second, decrease by 1 and reset html
+	let countdown = setInterval(function() {
+		console.log(seconds);
+		seconds--;
+		if (seconds >= 0) {
+			timer.innerHTML = `<h1>${seconds}</h1>`
+		}
+		else {
+			clearInterval(countdown);
+
+			//create function to do something once seconds reaches zero.
+			//possibably randomly plays a card if player not judge
+			//possibably randomly select a card if player is judge
+		}
+	}, 1000);
+
 }
 
 function updatePlayerScores(playersList, scores) {
 
 	console.log("updating playerscores", scores);
 	// Function to update the HTML 
+
+	//Start Timer:
+	startTimer();
 
 	//<div class="col-sm"><h1>5</h1></div>
 	let k = ('<div class="col-sm"><h3>') ;
@@ -271,6 +325,11 @@ function updatePlayerScores(playersList, scores) {
 		
 		let player = playersList[i];
 		let username = player.username;
+
+		if(player.username === client.username) {
+			//customize players view depending if they are judge vs reg player
+			updateGameStyling(player.judge);
+		}
 
 		if (player.judge) {
 			 
@@ -291,7 +350,7 @@ function updatePlayerScores(playersList, scores) {
 	document.getElementById('usersInGame').innerHTML = k;
 };
 
-function updateHand(new_hand) {
+function updateHand(new_hand, isjudge) {
 	/* update client's hand with the new array of the hand
 	Parameter:
 	new_hand : Array of card object
@@ -299,26 +358,36 @@ function updateHand(new_hand) {
 	*/
 	console.log("updating hand");
 
-	let handhtml = `<div class="row">
-						<div class="card-deck">`; // Parent Div
+	let handhtml = `<div class="row"><div class="card-deck">`; // Parent Div
 
 
 	// Produce the cards
 	for (let i = 0; i < new_hand.length; i++) {
 	
-		handhtml += (`<div class="card"> 
-				<div class="card-body" >
-				   <h5 class="card-title">${new_hand[i].value}</h5>
-				   <button id="cardbutton" onclick="sendCard(${i}, 'candidate')"> submit </button>
-				</div>
-			   </div>`);
+		//if player is judge, then they dont get button to send card. 
+		if (isjudge) {
+			handhtml += ('<div class="card">' + 
+			'<div class="card-body">' +
+			   `<h5 class="card-title">${new_hand[i].value}</h5>` +
+			`</div>` +
+		   `</div>`);
+		}
+
+		//if player is not judge then they get button to send card
+		else {
+			handhtml += (`<div class="card">`+ 
+			`<div class="card-body">`+
+			   `<h5 class="card-title">${new_hand[i].value}</h5>`+
+			   `<button id="cardbutton" onclick="sendCard(${i}, 'candidate')"> submit </button>`+
+			`</div>`+
+		   `</div>`);
+		}
 		if (i==2) {
 			handhtml += `<div class="w-100"></div>`; // add spacing after the third card
 		}
 	};
 
-	handhtml += 	`</div>
-	 			</div>`; // Close Parent Div
+	handhtml += `</div></div>`; // Close Parent Div
 
 	
 	document.getElementById('PlayerHand').innerHTML = handhtml;
@@ -328,13 +397,13 @@ function updatePrompt(prompt_msg) {
 	// update the prompt card with the prompt msg (just a string)
 	console.log(`updating the prompt ${prompt_msg}`);
 
-	let promptHTML = `<div class="col-lg-3 col-sm-5 col-xs-6">
-						 <div class="card text-white bg-dark">
-						 	<div class="card-body">
-						  		<h5 class="card-title"> ${prompt_msg} </h5>
-						  	</div>
-						  </div>
-						</div>`
+	let promptHTML = `<div class="col-lg-3 col-sm-5 col-xs-6">`+
+						 `<div class="card text-white bg-dark">`+
+						 	`<div class="card-body">`+
+						  		`<h5 class="card-title"> ${prompt_msg} </h5>`+
+						  	`</div>`+
+						  `</div>`+
+						`</div>`
 
 	document.getElementById('PromptCard').innerHTML = promptHTML;
 }
