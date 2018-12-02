@@ -263,7 +263,9 @@ function updatePlayerScores(playersList, scores) {
 
 	console.log("updating playerscores", scores);
 	// Function to update the HTML 
-	let k = ('<h3> Player Scores </h3> ') ;
+
+	//<div class="col-sm"><h1>5</h1></div>
+	let k = ('<div class="col-sm"><h3>') ;
 	
 	for (let i = 0; i < playersList.length; i++) {
 		
@@ -273,14 +275,18 @@ function updatePlayerScores(playersList, scores) {
 		if (player.judge) {
 			 
 			k += '<font color="red">' 
+				+ '<small>'
 			 	+ "Judge: " + username + " { " + scores[username] + " } "
-			 	+ '</font>';			
+				+ '</small>'
+				+'</font><br>';			
 		} else {
 			k += '<small> '
 				+ player.username + " { " + scores[username] + " } ";
-				+ '</small>'
+				+ '</small><br>'
 		};
 	};
+
+	k += '</h1></div>';
 
 	document.getElementById('usersInGame').innerHTML = k;
 };
