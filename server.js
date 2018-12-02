@@ -241,18 +241,20 @@ function newUserCards(socket, newPlayerCards) {
 	}
 
  	if (table.isTableReadyCustomCards()) {
+		
 		table.initGame();
-		// Send player's hands to each socket
+		
+		// Send player's hands to each socket. For loop is needed because each player sees a different hand.
 		for (let i = 0; i < table.getPlayerCount(); i++) {
 			
 			let message = "Game started!";
 			let player = table.PlayersList[i];
-		
-			io.to(player.socket_id).emit('game_start', true, message); 
+			
 
-			console.log("emitting to ", player.username, player.socket_id);
+			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
+
+			console.log(`Emitting hands and banner updates for ${player.username}, ${player.socket_id}`);
 			io.to(player.socket_id).emit('updateHand', player.hand);
-			io.to(player.socket_id).emit('updatePlayerScores', table.PlayersList, table.scores);
 		}
 
 		// Check if there is a prompt:
@@ -263,10 +265,13 @@ function newUserCards(socket, newPlayerCards) {
 			table.promptCard.value == "See server's console.log(). Empty Prompt Value error";
 		}
 
-		// Send prompt to everyone
-		console.log('sending the prompt card' + table.promptCard.value);
+		// No for loop needed because each player sees the same Banner and the same prompt
+		console.log('Emitting the prompt card to all clients ' + table.promptCard.value);
 		io.emit('updatePrompt', table.promptCard.value);
-		console.log(table.PlayersList);	
+
+		console.log('Emitting the Banner update to all clients');
+		io.emit('updateBanner', table.PlayersList, table.scores);
+
 	} else {
 		console.log("Waiting for players!!!");
 	}
@@ -300,7 +305,7 @@ function initGame(socket, canStart) {
 	if (canStart && table.getPlayerCount() >= 2) {
 			// Only players part of game can press start
 			if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
-				for (let i = 0; i < table.getPlayerCount(); i++) {
+				for (let i = 0; i < table.getPlayerCount(); i++) { 
 					
 					let message = "Start adding your own cards!";
 					let player = table.PlayersList[i];
@@ -329,7 +334,7 @@ function continueGame(socket) {
 
 			console.log("emitting to ", player.username, player.socket_id);
 			io.to(player.socket_id).emit('updateHand', player.hand);
-			io.to(player.socket_id).emit('updatePlayerScores', table.PlayersList, table.scores);
+			io.to(player.socket_id).emit('updateBanner', table.PlayersList, table.scores);
 			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
 			break;
 		}
