@@ -6,7 +6,7 @@ module.exports = class Game {
 	constructor() { 
 		
 		// Pre-Game Connection and Card Customization information
-		this.connectedPlayers = 0; // Counter of 
+		this.connectedPlayers = 0; // Counts the number of players actively connected to game
 		this.numPlayersReady = []; // Array storing the usernames of those who have pressed 'Ready' for custom card
 
 		// Player & Scoring information
@@ -90,6 +90,19 @@ module.exports = class Game {
 			}
 		}
 		return isFound;
+	}
+
+	isDisconnected() {
+		/* Function compares # actively connected players vs # of player objects in game  
+
+			Returns
+			Boolean: whether there is a disconnection or not
+		*/
+		if (this.connectedPlayers != this.getPlayerCount()) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	isJudge(username) {

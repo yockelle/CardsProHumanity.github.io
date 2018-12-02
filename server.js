@@ -17,7 +17,6 @@ var server = http.Server(app);
 const io = socketIO(server);
 var table = new Game();
 var totalOnlinePlayers = {};   // {socket.id:username}
-var tableOneConnectStatus = 0; // arbitrary counter for number of users connected to game 1
 
 app.set("port", PORT); // 8000 as default
 
@@ -154,7 +153,7 @@ function loginUser(socket, user_data) {
 
 		totalOnlinePlayers[socket.id] = user_data.username;
 		console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
-		if (tableOneConnectStatus != table.getPlayerCount() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
+		if (table.isDisconnected() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
 			io.to(socket.id).emit('Disconnected_Player');
 			table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
 		}
@@ -193,7 +192,7 @@ function loginUser(socket, user_data) {
 				console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
 
 				// If #connected != #player objects in game1 and player username is part of game, reconnect player
-				if (table.connectedPlayers != table.getPlayerCount() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
+				if (table.isDisconnected() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
 					io.to(socket.id).emit('Disconnected_Player');
 					table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
 				}
