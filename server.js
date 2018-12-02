@@ -15,6 +15,7 @@ const Game = require('./Classes/game');
 const app = express();
 var server = http.Server(app);
 const io = socketIO(server);
+const maxPlayers = 5;
 var table = new Game();
 var totalOnlinePlayers = {};   // {socket.id:username}
 
@@ -226,18 +227,20 @@ function disconnect(socket) {
 };
 
 function newUserCards(socket, newPlayerCards) {
-	
-	var file = fs.createWriteStream(__dirname + 'Classes/array.txt');
-	file.on('error', function(err) { /* error handling !!!!!!!!!!!*/ });
-	newPlayerCards.forEach(function(v) { file.write(v + '\n'); });
-	file.end();
-
-	if (!(table.numPlayersReady.includes(socket.id))) {
-			table.numPlayersReady.push(socket.id);
+	// Append new cards to file
+	let username = totalOnlinePlayers[socket.id];
+	if (table.isPlayerReadyCustomCards(username)) {
+		for (var i = 0; i < newPlayerCards.length ; i++) {
+			fs.appendFile('Classes/array.txt', newPlayerCards[i] + "\n", function (err) {
+				if (err) throw err;
+			});
+		}
+		console.log('Cards added!');
+	} else {
+		console.log('You are already ready and can\'t add more cards!');
 	}
 
- 	if (table.numPlayersReady.length == table.getPlayerCount()) {
-		
+ 	if (table.isTableReadyCustomCards()) {
 		table.initGame();
 		// Send player's hands to each socket
 		for (let i = 0; i < table.getPlayerCount(); i++) {
@@ -270,8 +273,8 @@ function newUserCards(socket, newPlayerCards) {
 };
 
 function joinGameOne(socket) {
-	// If players < 2 and player not in game, add player
-	if (table.getPlayerCount() < 2 && !table.isPartofGame(totalOnlinePlayers, socket.id)) {
+	// If players < maxPlayers and player not in game, add player
+	if (table.getPlayerCount() < maxPlayers && !table.isPartofGame(totalOnlinePlayers, socket.id) && table.isGameOpen()) {
 		console.log("Adding new player!");
 		table.addPlayer(username = totalOnlinePlayers[socket.id], socket_id = socket.id);
 		table.connectedPlayers += 1;
@@ -283,9 +286,11 @@ function joinGameOne(socket) {
 	}
 	// Show game is full only to person not in game
 	else {
-		if (!table.isPartofGame(totalOnlinePlayers, socket.id)) {
-			console.log("Game is full.");
-			let message = "Game is full.";
+		if (!table.isGameOpen()) {
+			let message = "Game is now closed. You cannot join midgame.";
+			io.to(socket.id).emit('game_start', false, message);
+		} else if (!table.isPartofGame(totalOnlinePlayers, socket.id)) {
+			let message = "Game can hold " + maxPlayers + " players max";
 			io.to(socket.id).emit('game_start', false, message);
 		}
 	}
@@ -295,7 +300,6 @@ function initGame(socket, canStart) {
 	if (canStart && table.getPlayerCount() >= 2) {
 			// Only players part of game can press start
 			if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
-
 				for (let i = 0; i < table.getPlayerCount(); i++) {
 					
 					let message = "Start adding your own cards!";
@@ -303,6 +307,7 @@ function initGame(socket, canStart) {
 
 					io.to(player.socket_id).emit('customCards', true, message);
 				}
+				table.gameClose();
 			} else {
 				let message = "You cannot start a game you are not part of!";
 				io.to(socket.id).emit('game_start', false, message);

@@ -1,5 +1,6 @@
 const Player = require('./Player');
 const Deck = require('./Deck');
+const fs = require('fs'); 
 
 module.exports = class Game {
 
@@ -8,6 +9,7 @@ module.exports = class Game {
 		// Pre-Game Connection and Card Customization information
 		this.connectedPlayers = 0; // Counts the number of players actively connected to game
 		this.numPlayersReady = []; // Array storing the usernames of those who have pressed 'Ready' for custom card
+		this.gameOpen = true; // Boolean stating whether game is open or closed to join, preventing users from joining midgame
 
 		// Player & Scoring information
 		this.PlayersList = []; // List of Player objects. { username, socket_id, hand, judge, connection}
@@ -27,6 +29,11 @@ module.exports = class Game {
 		this.winner = null; // Holds the winning player's name
 		this.gameState = 'answer'; // Toggles  between: 'answer' and 'judge' (to indicate the two rounds)
 
+		// Create new custom cards file
+		fs.open('Classes/array.txt', 'w', function (err, file) {
+			if (err) throw err;
+			console.log('Classes/array.txt was created for custom cards');
+		});
 	}
 
 	/* --------------------------------------  Getters , setters ----------------------------------*/
@@ -56,7 +63,6 @@ module.exports = class Game {
 			}
 		}
 		throw username + " is not a current user in the game! ";
-
 	}
 
 	getGameState() {
@@ -67,6 +73,13 @@ module.exports = class Game {
 		 * 'judge'  // judge phase is when judge decides
 		*/
 		return this.gameState;
+	}
+
+	gameClose() {
+		/*
+			Changes the boolean gameOpen to false
+		*/
+		this.gameOpen = false;
 	}
 
 	/* ---------------------------------------- Boolean Methods -------------------------------------*/
@@ -92,6 +105,17 @@ module.exports = class Game {
 		return isFound;
 	}
 
+	isGameOpen() {
+		/*
+			Returns whether a game is open or closed
+		*/
+		if (this.gameOpen == true) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	isDisconnected() {
 		/* Function compares # actively connected players vs # of player objects in game  
 
@@ -99,6 +123,34 @@ module.exports = class Game {
 			Boolean: whether there is a disconnection or not
 		*/
 		if (this.connectedPlayers != this.getPlayerCount()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	isPlayerReadyCustomCards(username) {
+		/*
+			Input the player's socket id
+
+			If not already in array, adds player to array to denote ready status
+		*/
+		if (!(this.numPlayersReady.includes(username))) {
+			this.numPlayersReady.push(username);
+			console.log("Player is ready");
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	isTableReadyCustomCards() {
+		/* Function compares # of players ready against player count
+
+			Returns
+			Boolean: whether table is ready to proceed to game step
+		*/
+		if (this.numPlayersReady.length == this.getPlayerCount()) {
 			return true;
 		} else {
 			return false;
