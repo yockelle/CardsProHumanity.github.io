@@ -208,8 +208,8 @@ function loginUser(socket, user_data) {
 		});
 	}); // end of mongoclient connection			
 
-	console.log('Receiving Login request ' + user_data.username + ' with password:' + user_data.password);
-	console.log('Current Online Players:');
+	console.log('Receiving Login request. Username: ' + user_data.username + ' Password:' + user_data.password);
+	console.log('Current Online Players:', table.PlayerList);
 };
 
 function disconnect(socket) {
@@ -253,7 +253,7 @@ function newUserCards(socket, newPlayerCards) {
 
 			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
 
-			console.log(`Emitting hands and banner updates for ${player.username}, ${player.socket_id}`);
+			console.log(`Sending hands and banner updates for user: ${player.username}, ${player.socket_id}`);
 			io.to(player.socket_id).emit('updateHand', player.hand);
 		}
 
@@ -266,10 +266,10 @@ function newUserCards(socket, newPlayerCards) {
 		}
 
 		// No for loop needed because each player sees the same Banner and the same prompt
-		console.log('Emitting the prompt card to all clients ' + table.promptCard.value);
+		console.log('Sending the Prompt card to all clients | ' + table.promptCard.value + ' |');
 		io.emit('updatePrompt', table.promptCard.value);
 
-		console.log('Emitting the Banner update to all clients');
+		console.log('Sending the Banner update to all clients');
 		io.emit('updateBanner', table.PlayersList, table.scores);
 
 	} else {
@@ -377,7 +377,7 @@ function cardPlayed(socket, data, option) {
 		*/
 		if (!table.hasPlayed(data.username) && !table.isJudge(data.username)) {	
 			
-			console.log("Successfully accepted card from: " + data.username + " " + data.card_idx);
+			console.log("Successfully accepted answer card from: " + data.username + " at card index:" + data.card_idx);
 			
 			// 1)
 			table.cardPlayed(data.card_idx, data.username);
@@ -386,8 +386,8 @@ function cardPlayed(socket, data, option) {
 			// TODO: socket.emit('disableAnswers', data['card_idx']); // Disable the buttons
 
 			// 3) Check if everyone else has played 
-			console.log("Everyone played?", table.everyonePlayed(), table.played.toString());
-			console.log("Gamestate is: ", table.getGameState());
+			console.log("Everyone played?", table.everyonePlayed());
+			console.log("Current Gamestate is: ", table.getGameState());
 
 			if (table.everyonePlayed() && (table.getGameState() === 'answer')) {
 				console.log(`Everyone has played, emitting the judgehand for all to see: ${table.judgeHand}`);
@@ -423,28 +423,30 @@ function cardPlayed(socket, data, option) {
 		 * 3) Get the Player object of the current judge
 		 * 4) end the round -> updating the scores of the winner, promoting the next judge, drawing new prompt
 		 * 5) Emitting to all players end judge round:
+		 		
 		 		old_judge : Player object of old judge
 		 		new_judge : Player object of next judge 
 		 		new_prompt : next prompt
 		 		table.PlayersList : Array of Player objects of players in the game
 		 		table.scores : newly updated hashmap of each players scores
-		 		winner : JSON object { user (string), completed_text (string)} of the winning card and winning full sentence
+		 		
+		 		winner : JSON object { username (string), completed_text (string)} of the winning card and winning full sentence
 		*/
 
 
-		console.log( 'Winner has been selected');
+		console.log( ' *** Winner has been selected! ***');
 
 		// 1) Find out who is the winner from the index of the card
 		let idx = data['card_idx'];
 		let winning_user = table.judgeHand[idx].owner; // Gets the owner of the card
-		console.log(`index of winning card is ${idx}, card is ${table.judgeHand[idx]}, owner is ${winning_user} `);
+		console.log(`* index of winning card is ${idx}, card is ${table.judgeHand[idx]}, owner is ${winning_user} `);
 
 		// 2 Combines the prompt and winning answer to produce the full sentence
 		let completed_text = table.buildSentence(idx); 
 
 		let winner = {
-			user: winning_user,
-			completed_text: completed_text
+			user: winning_user, // winning_user is the username (string)
+			completed_text: completed_text // string
 		};
 
 		// 3) Obtain the current judge 
