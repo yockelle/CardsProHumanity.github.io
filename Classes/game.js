@@ -69,6 +69,19 @@ module.exports = class Game {
 		return this.gameState;
 	}
 
+	playerReadyCustomCards(socket) {
+		/*
+			Input the player's socket id
+
+			If not already in array, adds player to array to denote ready status
+		*/
+		if (!(this.numPlayersReady.includes(socket))) {
+			this.numPlayersReady.push(socket);
+			console.log("Player is ready");
+		}
+	}
+
+
 	/* ---------------------------------------- Boolean Methods -------------------------------------*/
 	isPartofGame(totalOnlinePlayers, socket_id) {
 		/* Function to check if a player (socket_id) is part of the game --> boolean
@@ -99,6 +112,19 @@ module.exports = class Game {
 			Boolean: whether there is a disconnection or not
 		*/
 		if (this.connectedPlayers != this.getPlayerCount()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	isTableReadyCustomCards() {
+		/* Function compares # of players ready against player count
+
+			Returns
+			Boolean: whether table is ready to proceed to game step
+		*/
+		if (this.numPlayersReady.length == this.getPlayerCount()) {
 			return true;
 		} else {
 			return false;

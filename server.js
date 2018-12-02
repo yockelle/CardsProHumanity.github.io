@@ -232,12 +232,9 @@ function newUserCards(socket, newPlayerCards) {
 	newPlayerCards.forEach(function(v) { file.write(v + '\n'); });
 	file.end();
 
-	if (!(table.numPlayersReady.includes(socket.id))) {
-			table.numPlayersReady.push(socket.id);
-	}
+	table.playerReadyCustomCards(socket);
 
- 	if (table.numPlayersReady.length == table.getPlayerCount()) {
-		
+ 	if (table.isTableReadyCustomCards()) {
 		table.initGame();
 		// Send player's hands to each socket
 		for (let i = 0; i < table.getPlayerCount(); i++) {
