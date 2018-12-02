@@ -359,14 +359,14 @@ function startJudgeRound(judge_hand, judge) {
 	// 2) Client is a judge - the caards displayed can be clicked
 	if (clientIsJudge) { 
 		
-		html = '<h3> Pick your favourite card for this round! </h3> '
-		html += `<div class="row">`  // parent div
+		html = '<div class="row"><div class="col text-white"><h5>Pick the winner:</h5></div></div>'
+		html += '<div class="row"><div class="card-deck">'  // parent div
 
 		for (let i = 0; i < judge_hand.length; i++) {
 
 			let args = `${i},'winner'`; // sendCard(i , 'winner') 
 			
-			html += `<div class="card">
+			html += `<div class="card bg-light">
 	            		<div class="card-body">
 	              			<h5 class="card-title"> ${judge_hand[i]['value']} </h5>
 	              			<button id="cardbutton" onclick="sendCard(${args})"> This is the best one </button>
@@ -374,26 +374,26 @@ function startJudgeRound(judge_hand, judge) {
 	          		</div>` 
 		}
 
-		html += `</div>` // closing parent div
+		html += `</div></div>` // closing parent div
 
 	// 3) client isn't a judge - the card displayed cannot be clicked
 	} else { // if client is NOT judge, display the cards without button click
 		
-		html  = '<h3> Judge ' + judge.username + ' is currently deciding: ';
-		html += `<div class="row">`  // parent div
+		html = '<div class="row"><div class="col text-white"><h5>Judge<span style="color:#0000FF;"> ' + judge.username + ' </span>is currently deciding:</h5></div></div>'
+		html += '<div class="row"><div class="card-deck">'  // parent div
 
 		for (let i = 0; i < judge_hand.length; i++) {
 
 			let args = `${i},'winner'`; // sendCard(i , 'winner') 
 			
-			html += `<div class="card">
+			html += `<div class="card bg-light">
 	            		<div class="card-body">
 	              			<h5 class="card-title"> ${judge_hand[i]['value']} </h5>
 	            		</div>
 	          		</div>` 
 		}
 
-		html += `</div>` // closing parent div
+		html += `</div></div>` // closing parent div
 	};
 
 	// 4)
