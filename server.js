@@ -1,5 +1,6 @@
 var PORT = process.env.PORT || 8000;
 var dev = true;
+var skip2game = true;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
@@ -49,7 +50,12 @@ io.on('connection', function newConnection(socket) {
 	socket.on('cardPlayed', (data, option) => cardPlayed(socket, data, option)); // Player sends their choice cards 
 	socket.on('ResetGameButtonPressed', () => ResetGameButtonPressed(socket));
 
+	// debug stuff - developer mode only
 	socket.on('pingServer', (client_sockid) => console.log(client_sockid, "has pinged us"));
+	socket.on('skip2game', () => skipGame(socket) );
+	if (skip2game) {
+		socket.emit('createSkipButton');
+	}
 }); 
 
 setInterval(() => {
@@ -301,7 +307,25 @@ function joinGameOne(socket) {
 	}
 };
 
-function initGame(socket, canStart) {
+function initGame(socket, canStart, skip=false) {
+	// Skip flag is true when skip2game to allow skipping all of that
+	if (skip) {
+		// Skips the custom card thing, and straight up starts the game: - this is pulled from the newCards() function above
+		for (let i = 0; i < table.getPlayerCount(); i++) {
+			
+			let message = "Game started!";
+			let player = table.PlayersList[i];
+			
+			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
+
+			console.log(`Sending hands and banner updates for user: ${player.username}, ${player.socket_id}`);
+			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
+			io.to(player.socket_id).emit('updatePrompt')
+			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
+		}
+		return;
+	}
+
 	if (canStart && table.getPlayerCount() >= 2) {
 			// Only players part of game can press start
 			if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
@@ -483,3 +507,22 @@ function ResetGameButtonPressed(socket) {
  	//create a brand new table object to replace the old table
 	table = new Game();
  };
+
+
+ /* --------------------- Developer Mode ------------------------- */
+
+if (skip2game) {
+	console.log("DEVMODE: Skipping to GAME MODE Directly. ")
+};
+
+function skipGame(socket) {
+	// called by socket above
+	console.log("Skip2Game pressed... producing all");
+	let keys = Object.keys(totalOnlinePlayers); // The key is the socket.id, the value is the username
+	let PlayersList = keys.map( (key) => table.addPlayer(totalOnlinePlayers[key], key) );   
+	table.connectedPlayers += PlayersList.length; 
+
+	console.log("DEVMODE: Here are the current Players", table.PlayersList);
+	table.initGame(); // initGame on the server Game object
+	initGame(socket, true, true); // initGame to the clients
+}
