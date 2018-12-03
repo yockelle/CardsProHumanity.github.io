@@ -77,7 +77,7 @@ module.exports = class Deck {
         /* Draws a card of the decker, assigning it to an owner 
         
         Parameters:
-        owner (string) The owner to assign the card to when drawn
+        owner (string) The owner to assign the card to when drawn (Player.username)
 
         Returns:
         Randomly drawn Card object with owner set to who drew it

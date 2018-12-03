@@ -161,7 +161,7 @@ socket.on('Online_Players_List', onlinePlayersList);
 socket.on('game_start', game_start);
 
 // Game Page - HTML updates
-socket.on('updatePlayerScores', updatePlayerScores);
+socket.on('updateBanner', updateBanner);
 socket.on('updateHand', updateHand); // calls updateHand with clickable = true
 socket.on('updatePrompt', updatePrompt);
 
@@ -241,7 +241,19 @@ function onlinePlayersList(data, num_players_g1) {
 	document.getElementById("num_players_g1").innerHTML = num_g1;
 };
 
-function game_start(canStart, message) {
+function game_start(canStart, message, playersList, scores) {
+	/* Starts the Game. Called when the server gives an OK to start the game
+
+	Parameters
+	canStart (boolean) true/false if we can start, otherwise do something
+	message (string) message to print out
+	playersList ( list of the entire playerObject)
+	scores (hash set of the scores (from a game.scores attribute))
+
+	This function will also call to start off:
+	
+	*/
+
 	if (canStart) {
 		console.log(message);
 		
@@ -256,9 +268,6 @@ function game_start(canStart, message) {
 		document.getElementById("PlayerHand").style.display = "block";
 		document.getElementById("usersInGame").style.display = "block";
 
-		//set username inside game div to players username
-		//<div id="currentUser" class="col-sm"><h1>'PlaceHolder For Username'</h1></div>
-		document.getElementById('currentUser').innerHTML = `<h1>${client.username}</h1>`;
 
 	} else {
 		alert(message);
@@ -285,10 +294,10 @@ function updateGameStyling(playerIsJudge) {
 
 }
 
+
 function startTimer() {
 	var seconds = 30;
 	var timer = document.getElementById('Timer');
-
 	//reset to 30
 	timer.innerHTML = `<h1>30</h1>`;
 
@@ -309,18 +318,50 @@ function startTimer() {
 	}, 1000);
 
 }
+function updateBanner(playersList, scores) {
+	
+	/* Function called at the end of every round  
 
-function updatePlayerScores(playersList, scores) {
+	Updates the Banner screen on client:
+	The Rounds, Timer, Status, Player, and Players columns
+	
+	Parameters:
+	playersList (array of PlayerObjects)
+	scores (hash of {user (string) : score }) */
 
-	console.log("updating playerscores", scores);
-	// Function to update the HTML 
-
+	console.log("Updating the banner for the client");
+	
 	//Start Timer:
 	startTimer();
 
 	//<div class="col-sm"><h1>5</h1></div>
-	let k = ('<div class="col-sm"><h3>') ;
+/* 	let k = ('<div class="col-sm"><h3>') ;
 	
+	// Status Column -> either 'Judge or basic'	
+	for (let i = 0; i< playersList.length; i++) {
+		
+		let PlayerObject = playersList[i];
+
+		if (PlayerObject['username'] == client['username']) { // found the PlayerObject for username
+			
+			let status = (PlayerObject['judge'] ? "Judge" : "basic") // Judge if true, basic is false
+			
+			//document.getElementById('Status').innerHTML = `<h1> ${status} </h1>`;
+			
+			// if (PlayerObject['judge']) {
+			// 	// This actually doesn't work, how to change the background of the judge to black?
+			// 	updateGameStyling(true)
+			// }
+			// break;
+		}
+	} */
+
+	// Player Column
+	document.getElementById('currentUser').innerHTML = `<h1> ${client['username']} </h1>`;
+
+
+	// Modifying the Player List column with scores
+	let k = ('<div class="col-sm"><h3>') ;
 	for (let i = 0; i < playersList.length; i++) {
 		
 		let player = playersList[i];
@@ -332,8 +373,7 @@ function updatePlayerScores(playersList, scores) {
 		}
 
 		if (player.judge) {
-			 
-			k += '<font color="red">' 
+				k += '<font color="red">' 
 				+ '<small>'
 			 	+ "Judge: " + username + " { " + scores[username] + " } "
 				+ '</small>'
@@ -523,8 +563,21 @@ function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores, wi
 		document.getElementById('JudgeSelect').style.display = "none";
 	}
 
-	// Update the ScoreBoard HTML
-	updatePlayerScores(playersList, scores);
+	// Update the Banner HTML on top of the screen
+	updateBanner(playersList, scores);
+
+	//Update Hand (Find Current Player in PlayerList. Send new Hand to function to re-render)
+	for (let i = 0; i < playersList.length; i++) {
+		
+		let player = playersList[i];
+		let isjudge = player.judge;
+		let hand = player.hand
+
+		if(player.username === client.username) {
+			updateHand(hand, isjudge)
+			break;
+		}
+	}
 
 
 };
@@ -566,4 +619,3 @@ function reset_current_game(user) {
 	`</div>`
 	document.getElementById("CustomCards").outerHTML = html;
 };
-

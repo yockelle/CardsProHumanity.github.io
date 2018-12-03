@@ -196,7 +196,8 @@ module.exports = class Game {
 		Returns: 
 		True/False, everyone has played.
 		*/
-		return this.played.size === this.getPlayerCount() - 1;
+
+		return this.played.size === (this.getPlayerCount() - 1);
 	}
 
 	/* ------------------------------ Player Adding / Disconnecting --------------------------------------*/
@@ -253,7 +254,7 @@ module.exports = class Game {
 
 		 */
 
-		console.log("Initializing Game with " + this.getPlayerCount() + " player(s) ");
+		console.log("------ Initializing Game with " + this.getPlayerCount() + " player(s) ------ ");
 
 		// 1) Draw n cards for each player
 		this.PlayersList.map( player => player.drawCards(this.PlayerDeck, n));
@@ -346,7 +347,7 @@ module.exports = class Game {
 	}
 
 
-	switchAnswerState(winner) {
+	switchAnswerState(winner_username) {
 		/* Ends the current judging phase and switches to Answering phase  
 		 * 1) Reset who has played a card in the round, the judge's pile
 		 * 2) Deal a new prompt (black card) and find a new judge
@@ -354,39 +355,37 @@ module.exports = class Game {
 		 * 4) Set the current state to 'answer'
 		
 		Parameters:
-		winner (string) username of the winner of that round
+		winner (JSON object) username of the winner of that round
 
 		Returns:
 		void
 
 		*/
 		// 1)
-		console.log("called switchAnswerState(). BEFORE: --{", this.played, "}--.");
 		this.played.clear(); 
-		console.log("AFTER: --{", this.played, "}--");
-		console.log("judge hand BEFORE --{", this.judgeHand), "}--";
 		this.judgeHand = [];
-		console.log("judge hand AFTER --{", this.judgeHand, "}--");
-
 
 		// 2)
 		this.dealPromptCard();
 		this.newJudge();
 
 		// 3)
-		if (this._updateScoresAndCheckWinner(winner)) {
+		console.log(`Updating the scores because ${winner_username} has won the round`);
+		if (this._updateScoresAndCheckWinner(winner_username)) {
 			this.endGame(winner);
 		}
 
 		// 4
 		if (this.gameState == 'judge') {
-			this.gameState == 'answer';
-			console.log(`SWAPPED TO GAMESTATE: ANSWER`);
+			
+			this.gameState = 'answer';
+			console.log(`**************** swapped to gamestate: ${this.gameState} <-- should say answer ****************`);
 
+			/* This section is just for debugging
 			let entries = [];
 			for (let item of this.played.keys()) entries.push(item);
-
 			console.log(`Played is ${entries} JudgeHand is ${this.judgeHand.length}`);
+			*/
 
 		} else if (this.gameState === 'answer') {
 			throw `Error! Looks like gamestate is already in answer`;
@@ -409,7 +408,7 @@ module.exports = class Game {
 
 		 // 2) 
 		 this.gameState = 'judge';
-		 console.log("SWAPPED TO GAMESTATE: JUDGING")
+		 console.log(` *********** swapped to gamestate: ${this.gameState}, <-- should say judge ****************** `)
 	}
 	
 	_updateScoresAndCheckWinner(username) { 
@@ -421,8 +420,14 @@ module.exports = class Game {
 		Return:
 		Boolean : whether or not that player's score who we just updated just won
 		 */
-		this.scores[username] += 1;
+
+		if (this.scores[username] === false) { // if the username can't be found
+			throw `${username} cannot be found in ${this.score.keys()}`
+		}
+
+		this.scores[username]++;
 		const WINNING_SCORE = 10;
+		console.log(`Successfully updated score for ${username} to ${this.scores[username]}`);
 
 		return this.scores[username] == WINNING_SCORE;
 	}
