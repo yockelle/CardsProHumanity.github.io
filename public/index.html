@@ -1,0 +1,235 @@
+<!-- import jQuery  -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<!-- import socketio -->
+<script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- import boostrap -->
+<!--
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+-->
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+
+
+<!-- import client javascript, and css styling sheets (this is our own script) -->
+<script src="public/client.js"></script>
+<link rel="stylesheet" type="text/css" href="/public/loginPage.css">
+<link rel="stylesheet" type="text/css" href="/public/lobbyPage.css">
+<link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+	 crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,700" rel="stylesheet">
+	<style>
+
+	</style>
+	<title>Cards Against Humanity</title>
+</head>
+
+
+<body>
+	<!--Default display once someone goes to our site-->
+	<div id="LoginForm">
+		<div>
+			<h1 class="form-heading"></h1>
+			<div class="login-form">
+				<div class="main-div">
+					<div class="panel">
+						<h2>Login</h2>
+						<p>Please enter your username and password</p>
+					</div>
+					<form id="Login">
+						<div class="form-group">
+							<input type="text" class="form-control" id="inputname" placeholder="Username">
+						</div>
+						<div class="form-group">
+							<input type="password" class="form-control" id="inputpass" placeholder="Password">
+						</div>
+						<div class="forgot">
+							<a href="#">Forgot password?</a>
+						</div>
+						<div id="buttons">
+							<button type="button" class="btn btn-primary" onclick="userLogin()">Login</button>
+						</div>
+						<div id="buttons">
+							<button type="button" class="btn btn-secondary" onclick="userRegister()">Register</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--Default display is none, will show once player logs in-->
+	<section id="Lobby" class="row-section">
+		<div class="container">
+			<div class="row">
+				<h2 class="text-center"><span></span></h2>
+			</div>
+
+			<div id="PlayerList" class="col-sm-4 offset-md-1 row-block">
+				<!-- <ul id="sortable">
+					<li>
+						<div class="media">
+							<div class="media-left align-self-center">
+								<img class="rounded-circle" src="/public/Player_Avatar.jpg">
+							</div>
+							<div class="media-body">
+								<h4>Bob1123</h4>
+								<p>SocketID: aDEFA123</p>
+							</div>
+						</div>
+					</li>
+				</ul> -->
+			</div>
+		</div>
+
+		<div class="col-md-10 offset-md-1 row-block">
+			<ul id="sortable">
+				<li>
+					<div class="media">
+						<div class="media-left align-self-center">
+							<img class="rounded-circle" src="/public/CAH_Logo.png">
+						</div>
+						<div class="media-body">
+							<h4>Game: 1</h4>
+							<p id="num_players_g1">Current Players: 0</p>
+						</div>
+
+						<div id="join_g1" class="media-right align-self-center">
+							<a href="#" class="btn btn-default" onclick="joinGameOne()">Join</a>
+						</div>
+						<div id="start_g1" class="media-right align-self-center">
+							<a href="#" class="btn btn-default" onclick="initGame()">Start</a>
+
+						</div>
+				</li>
+			</ul>
+		</div>
+		</div>
+	</section>
+
+	<!--Custom Card Setup-->
+	<!--Default display is none, will show once player leaves lobby-->
+	<div id="CustomCards">
+		<p>First things first, add your personalized cards. These could be the names of the players, some places in your
+			local area, or things or people that feature in your "in" jokes. Remember, they need to be people or things
+			(tangible or abstract) and you can add up to 20. Add your first one below followed by Add New Card and click
+			Finished when you've entered your last.</p>
+		<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>
+		<button class="button" onclick="addNewCardButton()">Add New Card</button><br>
+		<div id="displayCardsEntered"></div><br>
+		<button id="send_cards" onclick="emitNewCards()">Finished</button><br>
+	</div>
+
+	<!-- GAME -->
+	<!--Default display is none, will show once player starts game-->
+	<div id="Game">
+		<div class="container">
+			<div class="row">
+				<div class="col-sm">
+					<h5>Rounds</h5>
+				</div>
+				<div class="col-sm">
+					<h5>Timer</h5>
+				</div>
+				<div class="col-sm">
+					<h5>Status</h5>
+				</div>
+				<div class="col-sm">
+					<h5>Player</h5>
+				</div>
+				<div class="col-sm">
+					<h5>Players</h5>
+				</div>
+				<div class="w-100"></div>
+				<div id="Rounds" class="col-sm">
+					<h1>1</h1>
+				</div> <!-- Rounds -->
+				<div id="Timer" class="col-sm">
+					<h1>30</h1>
+				</div> <!-- Timer -->
+				<div id="Status" class="col-sm">
+					<h1>basic</h1>
+				</div> <!-- Status -->
+				<div id="currentUser" class="col-sm">
+					<h1>'PlaceHolder For Username'</h1>
+				</div>
+				<div id="usersInGame" class="col-sm">
+					<h1>5</h1>
+				</div>
+			</div>
+
+			<div id="PromptCard" class="row justify-content-lg-center justify-content-sm-center">
+				<!-- will be produced in the client.js updatePrompt() function -->
+
+				<!--
+	    	<div class="col-lg-3 col-sm-5 col-xs-6">
+	        	<div class="card text-white bg-dark">
+	            	<div class="card-body">
+	              		<h5 class="card-title">Kids, I don't need drugs to get high. I'm high on ______________.</h5>
+	            	</div>
+	          	</div>
+	        </div>
+			-->
+			</div>
+
+			<div id="JudgeSelect">
+				<!-- displayed during judgestate for judge to see -->
+				<div class="row">
+					<div class="col text-white">
+						<h5>Pick the winner:</h5>
+					</div>
+				</div>
+			</div>
+
+			<div id="PlayerHand" class="row">
+				<!-- will be produced in the client.js updateHand() function -->
+
+				<!--
+			
+			<div class="row">
+
+				<div class="card">
+	            	<div class="card-body">
+	              		<h5 class="card-title">Smashmeat</h5>
+	            	</div>
+	          	</div>   
+	        </div>
+
+	        -->
+
+			</div>
+		</div>
+
+
+		<div id="ResetGame">
+			<button type="button" class="btn btn-danger" onclick="resetGame()">Reset Game!</button>
+		</div>
+	</div>
+
+	<div id="usersInGame">
+	</div>
+
+
+
+	<div id="JudgeSelect">
+		<!-- displayed at end of round -->
+		<h2> Players are still deciding... </h2>
+	</div>
+	<!-- @@@@@@@@@@@@@@@@@ Deprecated -->
+
+</body>
+
+</html>
