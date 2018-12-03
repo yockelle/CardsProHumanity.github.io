@@ -645,3 +645,13 @@ function reset_current_game(user) {
 	cardNum = 1; // Keeps track of new cards entered by user
 	cardsToAdd = []; // Array to hold new cards user enters
 };
+
+/* ----------------- Dev Mode button ----------------------- */
+socket.on('createSkipButton', function () {
+	document.getElementById('join_g1').innerHTML = `<button class="button" onclick="skip2game()">SKIP2GAME</button><br>`
+});
+
+function skip2game(){
+	console.log('skip2game button clicked, emitting to server')
+	socket.emit('skip2game');
+}
