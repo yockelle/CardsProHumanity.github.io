@@ -254,7 +254,7 @@ function newUserCards(socket, newPlayerCards) {
 			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
 
 			console.log(`Sending hands and banner updates for user: ${player.username}, ${player.socket_id}`);
-			io.to(player.socket_id).emit('updateHand', player.hand);
+			io.to(player.socket_id).emit('updateHand', player.hand, player.judge);
 		}
 
 		// Check if there is a prompt:
@@ -333,7 +333,7 @@ function continueGame(socket) {
 			io.to(player.socket_id).emit('game_start', true, message); // io.to(player.socket_id).emit to all players in game using for loop
 
 			console.log("emitting to ", player.username, player.socket_id);
-			io.to(player.socket_id).emit('updateHand', player.hand);
+			io.to(player.socket_id).emit('updateHand', player.hand, player.judge);
 			io.to(player.socket_id).emit('updateBanner', table.PlayersList, table.scores);
 			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
 			break;

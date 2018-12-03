@@ -5,7 +5,7 @@ var socket = io();
 
 var client = {
 	username: "null",
-	socket_id: "null"
+	socket_id: "null",
 }
 
 
@@ -264,6 +264,7 @@ function game_start(canStart, message, playersList, scores) {
 
 		// Turn on  Game div
 		document.getElementById("Game").style.display = "block";
+		
 		document.getElementById("PlayerHand").style.display = "block";
 		document.getElementById("usersInGame").style.display = "block";
 
@@ -273,20 +274,68 @@ function game_start(canStart, message, playersList, scores) {
 	}
 }
 
+function updateGameStyling(playerIsJudge) {
+
+	//customize players view depending if they are judge vs reg player
+	if (playerIsJudge) {
+		document.getElementById('Status').innerHTML = `<h1>Judge</h1>`;
+		document.getElementById("Game").style.backgroundColor = "black";
+		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = "black";
+		document.body.style.backgroundColor = "black";
+		document.documentElement.style.backgroundColor = "black";
+
+	} else {
+		document.getElementById('Status').innerHTML = `<h1>Basic</h1>`;
+		document.getElementById("Game").style.backgroundColor = "#2e2c2c";
+		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = "#2e2c2c";
+		document.body.style.backgroundColor = "#2e2c2c";
+		document.documentElement.style.backgroundColor = "#2e2c2c";
+	}
+
+}
+
+
+function startTimer() {
+	var seconds = 30;
+	var timer = document.getElementById('Timer');
+	//reset to 30
+	timer.innerHTML = `<h1>30</h1>`;
+
+	//every second, decrease by 1 and reset html
+	let countdown = setInterval(function() {
+		console.log(seconds);
+		seconds--;
+		if (seconds >= 0) {
+			timer.innerHTML = `<h1>${seconds}</h1>`
+		}
+		else {
+			clearInterval(countdown);
+
+			//create function to do something once seconds reaches zero.
+			//possibably randomly plays a card if player not judge
+			//possibably randomly select a card if player is judge
+		}
+	}, 1000);
+
+}
 function updateBanner(playersList, scores) {
-	/* Function called at the end of every round
+	
+	/* Function called at the end of every round  
 
 	Updates the Banner screen on client:
 	The Rounds, Timer, Status, Player, and Players columns
 	
 	Parameters:
 	playersList (array of PlayerObjects)
-	scores (hash of {user (string) : score })
+	scores (hash of {user (string) : score }) */
 
-
-	*/
 	console.log("Updating the banner for the client");
 	
+	//Start Timer:
+	startTimer();
+
+	//<div class="col-sm"><h1>5</h1></div>
+/* 	let k = ('<div class="col-sm"><h3>') ;
 	
 	// Status Column -> either 'Judge or basic'	
 	for (let i = 0; i< playersList.length; i++) {
@@ -297,17 +346,15 @@ function updateBanner(playersList, scores) {
 			
 			let status = (PlayerObject['judge'] ? "Judge" : "basic") // Judge if true, basic is false
 			
-			document.getElementById('Status').innerHTML = `<h1> ${status} </h1>`;
+			//document.getElementById('Status').innerHTML = `<h1> ${status} </h1>`;
 			
-			if (PlayerObject['judge']) {
-				// This actually doesn't work, how to change the background of the judge to black?
-				document.body.style.backgroundColor = '#000';
-			}
-			break;
+			// if (PlayerObject['judge']) {
+			// 	// This actually doesn't work, how to change the background of the judge to black?
+			// 	updateGameStyling(true)
+			// }
+			// break;
 		}
-	}
-
-
+	} */
 
 	// Player Column
 	document.getElementById('currentUser').innerHTML = `<h1> ${client['username']} </h1>`;
@@ -319,6 +366,11 @@ function updateBanner(playersList, scores) {
 		
 		let player = playersList[i];
 		let username = player.username;
+
+		if(player.username === client.username) {
+			//customize players view depending if they are judge vs reg player
+			updateGameStyling(player.judge);
+		}
 
 		if (player.judge) {
 				k += '<font color="red">' 
@@ -338,7 +390,7 @@ function updateBanner(playersList, scores) {
 	document.getElementById('usersInGame').innerHTML = k;
 };
 
-function updateHand(new_hand) {
+function updateHand(new_hand, isjudge) {
 	/* update client's hand with the new array of the hand
 	Parameter:
 	new_hand : Array of card object
@@ -346,26 +398,36 @@ function updateHand(new_hand) {
 	*/
 	console.log("updating hand");
 
-	let handhtml = `<div class="row">
-						<div class="card-deck">`; // Parent Div
+	let handhtml = `<div class="row"><div class="card-deck">`; // Parent Div
 
 
 	// Produce the cards
 	for (let i = 0; i < new_hand.length; i++) {
 	
-		handhtml += (`<div class="card"> 
-				<div class="card-body" >
-				   <h5 class="card-title">${new_hand[i].value}</h5>
-				   <button id="cardbutton" onclick="sendCard(${i}, 'candidate')"> submit </button>
-				</div>
-			   </div>`);
+		//if player is judge, then they dont get button to send card. 
+		if (isjudge) {
+			handhtml += ('<div class="card">' + 
+			'<div class="card-body">' +
+			   `<h5 class="card-title">${new_hand[i].value}</h5>` +
+			`</div>` +
+		   `</div>`);
+		}
+
+		//if player is not judge then they get button to send card
+		else {
+			handhtml += (`<div class="card">`+ 
+			`<div class="card-body">`+
+			   `<h5 class="card-title">${new_hand[i].value}</h5>`+
+			   `<button id="cardbutton" onclick="sendCard(${i}, 'candidate')"> submit </button>`+
+			`</div>`+
+		   `</div>`);
+		}
 		if (i==2) {
 			handhtml += `<div class="w-100"></div>`; // add spacing after the third card
 		}
 	};
 
-	handhtml += 	`</div>
-	 			</div>`; // Close Parent Div
+	handhtml += `</div></div>`; // Close Parent Div
 
 	
 	document.getElementById('PlayerHand').innerHTML = handhtml;
@@ -375,13 +437,13 @@ function updatePrompt(prompt_msg) {
 	// update the prompt card with the prompt msg (just a string)
 	console.log(`updating the prompt ${prompt_msg}`);
 
-	let promptHTML = `<div class="col-lg-3 col-sm-5 col-xs-6">
-						 <div class="card text-white bg-dark">
-						 	<div class="card-body">
-						  		<h5 class="card-title"> ${prompt_msg} </h5>
-						  	</div>
-						  </div>
-						</div>`
+	let promptHTML = `<div class="col-lg-3 col-sm-5 col-xs-6">`+
+						 `<div class="card text-white bg-dark">`+
+						 	`<div class="card-body">`+
+						  		`<h5 class="card-title"> ${prompt_msg} </h5>`+
+						  	`</div>`+
+						  `</div>`+
+						`</div>`
 
 	document.getElementById('PromptCard').innerHTML = promptHTML;
 }
@@ -503,6 +565,19 @@ function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores, wi
 
 	// Update the Banner HTML on top of the screen
 	updateBanner(playersList, scores);
+
+	//Update Hand (Find Current Player in PlayerList. Send new Hand to function to re-render)
+	for (let i = 0; i < playersList.length; i++) {
+		
+		let player = playersList[i];
+		let isjudge = player.judge;
+		let hand = player.hand
+
+		if(player.username === client.username) {
+			updateHand(hand, isjudge)
+			break;
+		}
+	}
 
 
 };
