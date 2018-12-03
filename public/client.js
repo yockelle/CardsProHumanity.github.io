@@ -622,4 +622,8 @@ function reset_current_game(user) {
 	//reset background color:
 	document.body.style.backgroundColor = "white";
 	document.documentElement.style.backgroundColor = "white";
+
+	//reset custom card variables
+	cardNum = 1; // Keeps track of new cards entered by user
+	cardsToAdd = []; // Array to hold new cards user enters
 };
