@@ -91,6 +91,7 @@ function sendCard(card_idx, option) {
 	console.log('Sending the card ' + data.card_idx + ' to Server from ' + data.username, data.socket_id);
 
 	socket.emit('cardPlayed', data, option);
+	clearInterval(countdownInterval);
 	
 }
 function resetGame() {
@@ -175,6 +176,10 @@ socket.on('customCards', customCards)
 
 // Reset Button
 socket.on('reset_current_game', reset_current_game);
+
+//Timer Ran Out
+socket.on('timerRanOutData', timerRanOutData);
+
 
 /* -------------------------------------- Socket.IO code:  Socket functions  ------------------------------------- */
 
@@ -295,29 +300,71 @@ function updateGameStyling(playerIsJudge) {
 }
 
 
-function startTimer() {
-	var seconds = 30;
-	var timer = document.getElementById('Timer');
-	//reset to 30
-	timer.innerHTML = `<h1>30</h1>`;
+// function startTimer() {
+// 	var seconds = 30;
+// 	var timer = document.getElementById('Timer');
+// 	//reset to 30
+// 	timer.innerHTML = `<h1>30</h1>`;
 
-	//every second, decrease by 1 and reset html
-	let countdown = setInterval(function() {
-		console.log(seconds);
-		seconds--;
-		if (seconds >= 0) {
-			timer.innerHTML = `<h1>${seconds}</h1>`
-		}
-		else {
-			clearInterval(countdown);
+// 	//every second, decrease by 1 and reset html
+// 	let countdown = setInterval(function() {
+// 		console.log(seconds);
+// 		seconds--;
+// 		if (seconds >= 0) {
+// 			timer.innerHTML = `<h1>${seconds}</h1>`
+// 		}
+// 		else {
+// 			clearInterval(countdown);
 
-			//create function to do something once seconds reaches zero.
-			//possibably randomly plays a card if player not judge
-			//possibably randomly select a card if player is judge
-		}
-	}, 1000);
+// 			//create function to do something once seconds reaches zero.
+// 			//possibably randomly plays a card if player not judge
+// 			//possibably randomly select a card if player is judge
+// 		}
+// 	}, 1000);
 
+// }
+
+var countdownInterval;
+var seconds;
+
+function countDown() {
+	let timer = document.getElementById('Timer');
+	console.log(seconds);
+	if (seconds >= 0) {
+		timer.innerHTML = `<h1>${seconds--}</h1>`
+	}
+	else {
+		clearInterval(countdownInterval);
+
+		socket.emit('timerRanOutGetCurrentGameState', client.username);
+
+	}
 }
+
+function resetAndStartTimer() {
+	//1. Start Timer:
+	//1a. Clear previous timer
+	if(countdownInterval) {
+		clearInterval(countdownInterval);
+	}
+	//1b. reset timer to 30
+	document.getElementById('Timer').innerHTML = `<h1>30</h1>`;
+	seconds = 30;
+	//1c. set a function so that every second, decrease by 1 and reset html
+	countdownInterval = setInterval(countDown, 1000);
+}
+
+function timerRanOutData(playerIsJudge,judgeMode,answerMode,playerHand,judgeHand) {
+
+	if (judgeMode) {
+		if (playerIsJudge) {
+			let maxIndex = judgeHand.size() -1;
+			let randomPick = Math.floor(Math.random() * maxIndex);  // returns a random integer from 0 to MaxIndex
+			document.getElementById("JudgeSelect").getElementsByTagName('button')[randomPick].click();
+		}
+	}
+}
+
 function updateBanner(playersList, scores) {
 	
 	/* Function called at the end of every round  
@@ -332,7 +379,7 @@ function updateBanner(playersList, scores) {
 	console.log("Updating the banner for the client");
 	
 	//1. Start Timer:
-	startTimer();
+	resetAndStartTimer();
 
 	//2. Update Player Name
 	document.getElementById('currentUser').innerHTML = `<h1> ${client['username']} </h1>`;
@@ -432,7 +479,6 @@ function updateHandorJudge(new_hand, isjudge) {
 
 	}
 
-
 };
 
 function updatePrompt(prompt_msg) {
@@ -464,9 +510,12 @@ function startJudgeRound(judge_hand, judge) {
 	 */
 	console.log("Received from startJudgeRound:" + judge_hand);
 	let clientIsJudge = (client['username'] === judge.username);
-	
-	// 1) Client is a judge - the caards displayed can be clicked
-	// 2) client isn't a judge - the card displayed cannot be clicked
+
+	//1. Start Timer:
+	resetAndStartTimer();
+
+	// 2a) Client is a judge - the caards displayed can be clicked
+	// 2b) client isn't a judge - the card displayed cannot be clicked
 	judgeRoundView(judge_hand, clientIsJudge, judge);
 
 };
@@ -600,8 +649,6 @@ function updateHandOrJudgeView(playersList) {
 	}
 }
 
-
-
 function customCards(status, message) {
 	if (status) {
 		console.log(message);
@@ -644,4 +691,7 @@ function reset_current_game(user) {
 	//reset custom card variables
 	cardNum = 1; // Keeps track of new cards entered by user
 	cardsToAdd = []; // Array to hold new cards user enters
+
+	//clear timer 
+	clearInterval(countdownInterval);
 };

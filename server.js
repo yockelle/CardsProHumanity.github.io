@@ -50,6 +50,7 @@ io.on('connection', function newConnection(socket) {
 	socket.on('ResetGameButtonPressed', () => ResetGameButtonPressed(socket));
 
 	socket.on('pingServer', (client_sockid) => console.log(client_sockid, "has pinged us"));
+	socket.on('timerRanOutGetCurrentGameState', (username) => timerRanOutGetCurrentGameState(socket, username));
 }); 
 
 setInterval(() => {
@@ -483,3 +484,17 @@ function ResetGameButtonPressed(socket) {
  	//create a brand new table object to replace the old table
 	table = new Game();
  };
+
+ function timerRanOutGetCurrentGameState(socket, username) {
+
+	let playerIsJudge = table.isJudge(username);
+	let judgeMode = (table.getGameState() === "judge");
+	let answerMode = (table.getGameState() === "answer");
+	let playerHand = table.getPlayer(username).hand;
+	let judgeHand = table.judgeHand;
+
+	io.to(socket.id).emit('timerRanOutGetCurrentGameState',playerIsJudge,judgeMode,answerMode,playerHand,judgeHand);
+
+
+
+ }
