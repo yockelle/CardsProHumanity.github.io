@@ -618,4 +618,8 @@ function reset_current_game(user) {
 	`<button id="send_cards" class="button" onclick="emitNewCards()">Finished</button><br>` +
 	`</div>`
 	document.getElementById("CustomCards").outerHTML = html;
+
+	//reset background color:
+	document.body.style.backgroundColor = "white";
+	document.documentElement.style.backgroundColor = "white";
 };

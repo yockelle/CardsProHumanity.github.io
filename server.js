@@ -1,5 +1,5 @@
 var PORT = process.env.PORT || 8000;
-var dev = false;
+var dev = true;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
