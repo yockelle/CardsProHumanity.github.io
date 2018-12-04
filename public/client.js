@@ -91,7 +91,10 @@ function sendCard(card_idx, option) {
 	console.log('Sending the card ' + data.card_idx + ' to Server from ' + data.username, data.socket_id);
 
 	socket.emit('cardPlayed', data, option);
-	clearInterval(countdownInterval);
+
+	if(countdownInterval) {
+		clearInterval(countdownInterval);
+	}
 	
 }
 function resetGame() {
@@ -178,7 +181,7 @@ socket.on('customCards', customCards)
 socket.on('reset_current_game', reset_current_game);
 
 //Timer Ran Out
-socket.on('timerRanOutData', timerRanOutData);
+socket.on('timerRanOut_AutoPick', timerRanOut_AutoPick);
 
 
 /* -------------------------------------- Socket.IO code:  Socket functions  ------------------------------------- */
@@ -354,18 +357,39 @@ function resetAndStartTimer() {
 	countdownInterval = setInterval(countDown, 1000);
 }
 
-function timerRanOutData(playerIsJudge,judgeMode,answerMode,playerHand,judgeHand) {
+function timerRanOut_AutoPick(playerIsJudge,judgeMode,answerMode,playerHand,judgeHand) {
+
+	//console.log("inside TimeOut",playerIsJudge,judgeMode,answerMode,playerHand,judgeHand)
 
 	if (judgeMode) {
 		if (playerIsJudge) {
-			let maxIndex = judgeHand.size() -1;
+			let maxIndex = judgeHand.length -1;
 			let randomPick = Math.floor(Math.random() * maxIndex);  // returns a random integer from 0 to MaxIndex
+
+			let msg = "TimedOut: Card(" +randomPick + "): " + judgeHand[randomPick].value +" was randomly chosen for you!"
+			console.log(msg);
+			alert(msg);
+
 			document.getElementById("JudgeSelect").getElementsByTagName('button')[randomPick].click();
 		}
+	} else if (answerMode) {
+		if (!playerIsJudge) {
+
+			let maxIndex = playerHand.length -1;
+			let randomPick = Math.floor(Math.random() * maxIndex);  // returns a random integer from 0 to MaxIndex
+
+			let msg = "TimedOut: Card(" +randomPick + "): " + playerHand[randomPick].value +" was randomly chosen for you!"
+			console.log(msg);
+			alert(msg);
+
+			document.getElementById("PlayerHand").getElementsByTagName('button')[randomPick].click();
+		}
 	}
+
+
 }
 
-function updateBanner(playersList, scores) {
+function updateBanner(playersList, scores, round) {
 	
 	/* Function called at the end of every round  
 
@@ -390,6 +414,10 @@ function updateBanner(playersList, scores) {
 
 	//4. Modifying the Player List column with scores
 	updateScore(playersList, scores);
+
+	//5. Update Round
+	console.log("Updating Round",round);
+	document.getElementById('Rounds').innerHTML = `<h1> ${round} </h1>`;
 
 };
 
@@ -569,7 +597,7 @@ function judgeRoundView(judge_hand, clientIsJudge, judge) {
 }
 
 
-function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores, winner) {
+function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores, winner, round) {
 	/* ends the current round. 
 	 * Parameters:
 	  old_judge (Player object)
@@ -598,7 +626,7 @@ function endJudgeRound(old_judge, new_judge, new_prompt, playersList, scores, wi
 
 	// 3) 
 	// Update the Banner HTML on top of the screen
-	updateBanner(playersList, scores);
+	updateBanner(playersList, scores, round);
 
 	// 4)
 	//Update Hand if user is player - (turn on hand view, turn off judge view. Re-render Cards)
@@ -693,5 +721,8 @@ function reset_current_game(user) {
 	cardsToAdd = []; // Array to hold new cards user enters
 
 	//clear timer 
-	clearInterval(countdownInterval);
+	if(countdownInterval) {
+		clearInterval(countdownInterval);
+	}
+
 };

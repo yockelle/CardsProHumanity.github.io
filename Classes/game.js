@@ -28,6 +28,7 @@ module.exports = class Game {
 		// Game Status
 		this.winner = null; // Holds the winning player's name
 		this.gameState = 'answer'; // Toggles  between: 'answer' and 'judge' (to indicate the two rounds)
+		this.round = 1;
 
 		// Create new custom cards file
 		fs.open('Classes/array.txt', 'w', function (err, file) {
@@ -271,6 +272,9 @@ module.exports = class Game {
 		// 4) set First player in the list as the initial judge
 		this.PlayersList[0].judge  = true;
 
+		// 5) set round to 1
+		this.round = 1;
+
 	}
 
 	dealPromptCard() {
@@ -392,6 +396,9 @@ module.exports = class Game {
 		} else {
 			throw `Error! ${this.gameState} is not a valid gamestate`;
 		}
+
+		//5 add 1 to round
+		this.round++;
 	}
 
 	switchJudgeState() {
