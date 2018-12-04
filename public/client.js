@@ -726,3 +726,13 @@ function reset_current_game(user) {
 	}
 
 };
+
+/* ----------------- Dev Mode button ----------------------- */
+socket.on('createSkipButton', function () {
+	document.getElementById('join_g1').innerHTML = `<button class="button" onclick="skip2game()">SKIP2GAME</button><br>`
+});
+
+function skip2game(){
+	console.log('skip2game button clicked, emitting to server')
+	socket.emit('skip2game');
+}
