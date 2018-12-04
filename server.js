@@ -1,6 +1,6 @@
 var PORT = process.env.PORT || 8000;
-var dev = true;
-var skip2game = true;
+var dev = false;
+var skip2game = false;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
