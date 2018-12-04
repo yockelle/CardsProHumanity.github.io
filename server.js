@@ -1,6 +1,6 @@
 var PORT = process.env.PORT || 8000;
-var dev = false;
-var skip2game = false;
+var dev = true;
+var skip2game = true;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
@@ -49,6 +49,8 @@ io.on('connection', function newConnection(socket) {
 
 	socket.on('cardPlayed', (data, option) => cardPlayed(socket, data, option)); // Player sends their choice cards 
 	socket.on('ResetGameButtonPressed', () => ResetGameButtonPressed(socket));
+
+	socket.on('updateChatbox', (message, sender) => updateChatbox(socket, message, sender));
 
 	// debug stuff - developer mode only
 	socket.on('pingServer', (client_sockid) => console.log(client_sockid, "has pinged us"));
@@ -527,6 +529,12 @@ function ResetGameButtonPressed(socket) {
 
 
 
+ }
+
+ function updateChatbox(socket, message, username) {
+ 	/* Receives message and username from client and displays into the chatbox */
+ 	console.log(`Received message: ${message} from user ${username}`);
+ 	io.emit('updateChatbox', message, username);
  }
 
  /* --------------------- Developer Mode ------------------------- */
