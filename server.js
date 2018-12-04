@@ -52,6 +52,9 @@ io.on('connection', function newConnection(socket) {
 
 	// debug stuff - developer mode only
 	socket.on('pingServer', (client_sockid) => console.log(client_sockid, "has pinged us"));
+
+	socket.on('timerRanOutGetCurrentGameState', (username) => timerRanOutGetCurrentGameState(socket, username));
+	
 	socket.on('skip2game', () => skipGame(socket) );
 	if (skip2game) {
 		socket.emit('createSkipButton');
@@ -276,7 +279,7 @@ function newUserCards(socket, newPlayerCards) {
 		io.emit('updatePrompt', table.promptCard.value);
 
 		console.log('Sending the Banner update to all clients');
-		io.emit('updateBanner', table.PlayersList, table.scores);
+		io.emit('updateBanner', table.PlayersList, table.scores, table.round);
 
 	} else {
 		console.log("Waiting for players!!!");
@@ -358,7 +361,7 @@ function continueGame(socket) {
 
 			console.log("emitting to ", player.username, player.socket_id);
 			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
-			io.to(player.socket_id).emit('updateBanner', table.PlayersList, table.scores);
+			io.to(player.socket_id).emit('updateBanner', table.PlayersList, table.scores, table.round);
 			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
 			break;
 		}
@@ -483,7 +486,7 @@ function cardPlayed(socket, data, option) {
 		let new_prompt = table.promptCard.value;
 		let scores = table.scores;
 
-		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores, winner);
+		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores, winner, table.round);
 	
 	} else {
 		throw option + ' is an invalid option. Must be either "winner" or "candidate" '; 
@@ -508,6 +511,23 @@ function ResetGameButtonPressed(socket) {
 	table = new Game();
  };
 
+ function timerRanOutGetCurrentGameState(socket, username) {
+
+	//console.log(username," Player Timed out")
+
+	let playerIsJudge = table.isJudge(username);
+	let judgeMode = (table.getGameState() === "judge");
+	let answerMode = (table.getGameState() === "answer");
+	let playerHand = table.getPlayer(username).hand;
+	let judgeHand = table.judgeHand;
+
+	//console.log("---GameState: ",playerIsJudge,judgeMode,answerMode,playerHand,judgeHand);
+
+	io.to(socket.id).emit('timerRanOut_AutoPick',playerIsJudge,judgeMode,answerMode,playerHand,judgeHand);
+
+
+
+ }
 
  /* --------------------- Developer Mode ------------------------- */
 
