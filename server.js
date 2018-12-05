@@ -164,7 +164,7 @@ function loginUser(socket, user_data) {
 		totalOnlinePlayers[socket.id] = user_data.username;
 		console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
 		if (table.isDisconnected() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
-			io.to(socket.id).emit('Disconnected_Player', table.hasAddedCards());
+			io.to(socket.id).emit('Disconnected_Player', table.allAddedCustomCards(), table.playerAddedCustomCard());
 			table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
 		}
 
@@ -204,7 +204,7 @@ function loginUser(socket, user_data) {
 				// If #connected != #player objects in game1 and player username is part of game, reconnect player
 				if (table.isDisconnected() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
 					table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
-					io.to(socket.id).emit('Disconnected_Player', table.hasAddedCards());
+					io.to(socket.id).emit('Disconnected_Player', table.allAddedCustomCards(), table.playerAddedCustomCard(totalOnlinePlayers[socket.id]));
 				}
 			}
 			// Username and and password does not match

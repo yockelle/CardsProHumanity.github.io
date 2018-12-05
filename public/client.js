@@ -143,7 +143,7 @@ var emitNewCards = function() {
 	console.log("Sending cards to server. ");
 	socket.emit("newUserCards",cardsToAdd);
 
-	let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>')		
+	let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>');
 	document.getElementById("send_cards").outerHTML = html;
 }
 
@@ -665,11 +665,11 @@ function updateHandOrJudgeView(playersList) {
 }
 
 /* ---------------------------------- Gameflow Redirection ---------------------------------- */
-function disconnectedPlayer(hasAddedCards){
+function disconnectedPlayer(allAddedCustomCards, playerAddedCustomCard){
 	/* Creates a 'Continue' button for the disconnected player */
 	let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="disconnectedPlayer()">Continue</a>');
 	document.getElementById("join_g1").innerHTML = html;
-	if (hasAddedCards) {
+	if (allAddedCustomCards) {
 		// Go directly to game
 		document.getElementById("Lobby").style.display = "none";
 		document.getElementById("start_g1").style.display = "none";
@@ -680,6 +680,10 @@ function disconnectedPlayer(hasAddedCards){
 		document.getElementById("Lobby").style.display = "none";
 		document.getElementById("start_g1").style.display = "none";
 		document.getElementById("CustomCards").style.display = "block";
+		if (playerAddedCustomCard) {
+			let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>');
+			document.getElementById("send_cards").outerHTML = html;
+		}
 	}
 }
 

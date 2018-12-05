@@ -179,6 +179,28 @@ module.exports = class Game {
 
 	}
 
+	playerAddedCustomCard(username) {
+		/*
+			Returns whether current player has added their custom cards
+		*/
+		if (this.numPlayersReady.includes(username)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	allAddedCustomCards() {
+		/*
+			Returns whether all players have added their custom cards
+		*/
+		if (this.numPlayersReady.length == this.getPlayerCount()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	hasPlayed(username){
 		/* Check whether player has played yet --> boolean
 		
@@ -219,14 +241,6 @@ module.exports = class Game {
 				this.PlayersList[i].connection = true;
 				break;
 			}
-		}
-	}
-
-	hasAddedCards() {
-		if (this.numPlayersReady.length == this.getPlayerCount()) {
-			return true;
-		} else {
-			return false;
 		}
 	}
 
