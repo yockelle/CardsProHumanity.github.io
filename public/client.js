@@ -147,6 +147,24 @@ var emitNewCards = function() {
 	document.getElementById("send_cards").outerHTML = html;
 }
 
+var chatlisten = document.getElementById('btn-input');
+chatlisten.addEventListener("keydown", function (event) {
+	if (event.keyCode === 13) {  //checks whether the pressed key is "Enter"
+		sendChat();
+	}
+});
+
+function sendChat() {
+	/* clicked from the send chat button , sends to th server */
+	
+	let sender = client['username'];
+	let message = document.getElementById('btn-input').value;
+	
+	document.getElementById('btn-input').value = "";
+	
+	console.log(`sending ${message} to the server`);
+	socket.emit('updateChatbox', message, sender);
+}
 
 /* --------------------------------------------Socket.IO code : Client Listens -----------------------------------------------------------------------------------*/
 
@@ -177,6 +195,9 @@ socket.on('reset_current_game', reset_current_game);
 
 //Timer Ran Out
 socket.on('timerRanOut_AutoPick', timerRanOut_AutoPick);
+
+// Chat Box
+socket.on('updateChatbox', updateChatbox);
 
 
 /* -------------------------------------- Socket.IO code:  Socket functions  ------------------------------------- */
@@ -234,6 +255,19 @@ function onlinePlayersList(data, num_players_g1) {
 
 	let num_g1 = ('<p id="num_players_g1">Current Players: ' + num_players_g1 + '</p>');
 	document.getElementById("num_players_g1").innerHTML = num_g1;
+
+
+	// Part #2 : update list for the Chatbox. Split into two for loops to make it more readable
+	let chatHTML = `<tbody>`;
+	for (let key in data) {
+		chatHTML += `<tr> 
+						<td>${key}</td>
+						<td>${data[key]}</td>
+					</tr>`
+	}
+	chatHTML += `</tbody>`;
+	document.getElementById('LobbyList').innerHTML = chatHTML;
+
 };
 
 function game_start(canStart, message, playersList, scores) {
@@ -740,6 +774,20 @@ function reset_current_game(user) {
 	}
 
 };
+
+function updateChatbox(message, username) {
+	/* Func to receive 'chatMessages' from server, and update clients html
+	Parameters:
+	socket (socket object)
+	message (string) the user
+	username (string) the sender
+	*/
+
+	let sender = `<div> <b>${username}:</b>`
+	console.log(`received chat: ${message} from ${username}`); 
+	document.getElementById('MessageBox').innerHTML += `${sender} ${message}</div`
+
+}
 
 /* ----------------- Dev Mode button ----------------------- */
 socket.on('createSkipButton', function () {
