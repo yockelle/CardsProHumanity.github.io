@@ -152,6 +152,13 @@ var emitNewCards = function() {
 	document.getElementById("send_cards").outerHTML = html;
 }
 
+var chatlisten = document.getElementById('btn-input');
+chatlisten.addEventListener("keydown", function (event) {
+	if (event.keyCode === 13) {  //checks whether the pressed key is "Enter"
+		sendChat();
+	}
+});
+
 function sendChat() {
 	/* clicked from the send chat button , sends to th server */
 	
@@ -162,8 +169,6 @@ function sendChat() {
 	
 	console.log(`sending ${message} to the server`);
 	socket.emit('updateChatbox', message, sender);
-
-
 }
 
 /* --------------------------------------------Socket.IO code : Client Listens -----------------------------------------------------------------------------------*/
