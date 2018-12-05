@@ -72,7 +72,7 @@ module.exports = class Player {
    		}
       // *TODO*  don't draw card until after round ends
       // return this.hand.splice(index,1) 
-      let card = this.hand.splice(index,1, deck.drawCard())[0];
+      let card = this.hand.splice(index,1, deck.drawCard(this.username))[0];
    		return card
    	}
 

@@ -1,5 +1,6 @@
 var PORT = process.env.PORT || 8000;
 var dev = false;
+var skip2game = false;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
@@ -49,7 +50,15 @@ io.on('connection', function newConnection(socket) {
 	socket.on('cardPlayed', (data, option) => cardPlayed(socket, data, option)); // Player sends their choice cards 
 	socket.on('ResetGameButtonPressed', () => ResetGameButtonPressed(socket));
 
+	// debug stuff - developer mode only
 	socket.on('pingServer', (client_sockid) => console.log(client_sockid, "has pinged us"));
+
+	socket.on('timerRanOutGetCurrentGameState', (username) => timerRanOutGetCurrentGameState(socket, username));
+	
+	socket.on('skip2game', () => skipGame(socket) );
+	if (skip2game) {
+		socket.emit('createSkipButton');
+	}
 }); 
 
 setInterval(() => {
@@ -208,8 +217,8 @@ function loginUser(socket, user_data) {
 		});
 	}); // end of mongoclient connection			
 
-	console.log('Receiving Login request ' + user_data.username + ' with password:' + user_data.password);
-	console.log('Current Online Players:');
+	console.log('Receiving Login request. Username: ' + user_data.username + ' Password:' + user_data.password);
+	console.log('Current Online Players:', table.PlayerList);
 };
 
 function disconnect(socket) {
@@ -241,18 +250,20 @@ function newUserCards(socket, newPlayerCards) {
 	}
 
  	if (table.isTableReadyCustomCards()) {
+		
 		table.initGame();
-		// Send player's hands to each socket
+		
+		// Send player's hands to each socket. For loop is needed because each player sees a different hand.
 		for (let i = 0; i < table.getPlayerCount(); i++) {
 			
 			let message = "Game started!";
 			let player = table.PlayersList[i];
-		
-			io.to(player.socket_id).emit('game_start', true, message); 
+			
 
-			console.log("emitting to ", player.username, player.socket_id);
-			io.to(player.socket_id).emit('updateHand', player.hand, player.judge);
-			io.to(player.socket_id).emit('updatePlayerScores', table.PlayersList, table.scores);
+			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
+
+			console.log(`Sending hands and banner updates for user: ${player.username}, ${player.socket_id}`);
+			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
 		}
 
 		// Check if there is a prompt:
@@ -263,10 +274,13 @@ function newUserCards(socket, newPlayerCards) {
 			table.promptCard.value == "See server's console.log(). Empty Prompt Value error";
 		}
 
-		// Send prompt to everyone
-		console.log('sending the prompt card' + table.promptCard.value);
+		// No for loop needed because each player sees the same Banner and the same prompt
+		console.log('Sending the Prompt card to all clients | ' + table.promptCard.value + ' |');
 		io.emit('updatePrompt', table.promptCard.value);
-		console.log(table.PlayersList);	
+
+		console.log('Sending the Banner update to all clients');
+		io.emit('updateBanner', table.PlayersList, table.scores, table.round);
+
 	} else {
 		console.log("Waiting for players!!!");
 	}
@@ -296,11 +310,29 @@ function joinGameOne(socket) {
 	}
 };
 
-function initGame(socket, canStart) {
+function initGame(socket, canStart, skip=false) {
+	// Skip flag is true when skip2game to allow skipping all of that
+	if (skip) {
+		// Skips the custom card thing, and straight up starts the game: - this is pulled from the newCards() function above
+		for (let i = 0; i < table.getPlayerCount(); i++) {
+			
+			let message = "Game started!";
+			let player = table.PlayersList[i];
+			
+			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
+
+			console.log(`Sending hands and banner updates for user: ${player.username}, ${player.socket_id}`);
+			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
+			io.to(player.socket_id).emit('updatePrompt')
+			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
+		}
+		return;
+	}
+
 	if (canStart && table.getPlayerCount() >= 2) {
 			// Only players part of game can press start
 			if (table.isPartofGame(totalOnlinePlayers, socket.id)) {
-				for (let i = 0; i < table.getPlayerCount(); i++) {
+				for (let i = 0; i < table.getPlayerCount(); i++) { 
 					
 					let message = "Start adding your own cards!";
 					let player = table.PlayersList[i];
@@ -328,8 +360,8 @@ function continueGame(socket) {
 			io.to(player.socket_id).emit('game_start', true, message); // io.to(player.socket_id).emit to all players in game using for loop
 
 			console.log("emitting to ", player.username, player.socket_id);
-			io.to(player.socket_id).emit('updateHand', player.hand, player.judge);
-			io.to(player.socket_id).emit('updatePlayerScores', table.PlayersList, table.scores);
+			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
+			io.to(player.socket_id).emit('updateBanner', table.PlayersList, table.scores, table.round);
 			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
 			break;
 		}
@@ -372,15 +404,18 @@ function cardPlayed(socket, data, option) {
 		*/
 		if (!table.hasPlayed(data.username) && !table.isJudge(data.username)) {	
 			
-			console.log("Successfully accepted card from: " + data.username + " " + data.card_idx);
+			console.log("Successfully accepted answer card from: " + data.username + " at card index:" + data.card_idx);
 			
 			// 1)
 			table.cardPlayed(data.card_idx, data.username);
 			
 			// 2) Emission from server to tell client to highlight the card (in HTML) to signify disabled button
-			socket.emit('disableAnswers', data['card_idx']); // Disable the buttons
+			// TODO: socket.emit('disableAnswers', data['card_idx']); // Disable the buttons
 
 			// 3) Check if everyone else has played 
+			console.log("Everyone played?", table.everyonePlayed());
+			console.log("Current Gamestate is: ", table.getGameState());
+
 			if (table.everyonePlayed() && (table.getGameState() === 'answer')) {
 				console.log(`Everyone has played, emitting the judgehand for all to see: ${table.judgeHand}`);
 
@@ -393,7 +428,7 @@ function cardPlayed(socket, data, option) {
 				io.to(judge.socket_id).emit('showJudgeDisplay', table.judgeHand); // show Judge HTML to the judge
 				
 			} else {
-				console.log(`Those who played: ${table.played}. Waiting for ${table.getPlayerCount()-1} total to play`);
+				console.log(`Those who played: ${table.played.length}. Waiting for ${table.getPlayerCount()-1} total to play`);
 			}
 		} else { // Reject the card they are trying to answer with if they are a judge or they've already played
 			console.log("Card rejected from: " + data.username + " " + data.card_idx);
@@ -415,28 +450,30 @@ function cardPlayed(socket, data, option) {
 		 * 3) Get the Player object of the current judge
 		 * 4) end the round -> updating the scores of the winner, promoting the next judge, drawing new prompt
 		 * 5) Emitting to all players end judge round:
+		 		
 		 		old_judge : Player object of old judge
 		 		new_judge : Player object of next judge 
 		 		new_prompt : next prompt
 		 		table.PlayersList : Array of Player objects of players in the game
 		 		table.scores : newly updated hashmap of each players scores
-		 		winner : JSON object { user (string), completed_text (string)} of the winning card and winning full sentence
+		 		
+		 		winner : JSON object { username (string), completed_text (string)} of the winning card and winning full sentence
 		*/
 
 
-		console.log( 'Winner has been selected');
+		console.log( ' *** Winner has been selected! ***');
 
 		// 1) Find out who is the winner from the index of the card
 		let idx = data['card_idx'];
 		let winning_user = table.judgeHand[idx].owner; // Gets the owner of the card
-		console.log(`index of winning card is ${idx}, card is ${table.judgeHand[idx]}, owner is ${winning_user} `);
+		console.log(`* index of winning card is ${idx}, card is ${table.judgeHand[idx]}, owner is ${winning_user} `);
 
 		// 2 Combines the prompt and winning answer to produce the full sentence
 		let completed_text = table.buildSentence(idx); 
 
 		let winner = {
-			user: winning_user,
-			completed_text: completed_text
+			user: winning_user, // winning_user is the username (string)
+			completed_text: completed_text // string
 		};
 
 		// 3) Obtain the current judge 
@@ -449,7 +486,7 @@ function cardPlayed(socket, data, option) {
 		let new_prompt = table.promptCard.value;
 		let scores = table.scores;
 
-		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores, winner);
+		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores, winner, table.round);
 	
 	} else {
 		throw option + ' is an invalid option. Must be either "winner" or "candidate" '; 
@@ -473,3 +510,39 @@ function ResetGameButtonPressed(socket) {
  	//create a brand new table object to replace the old table
 	table = new Game();
  };
+
+ function timerRanOutGetCurrentGameState(socket, username) {
+
+	//console.log(username," Player Timed out")
+
+	let playerIsJudge = table.isJudge(username);
+	let judgeMode = (table.getGameState() === "judge");
+	let answerMode = (table.getGameState() === "answer");
+	let playerHand = table.getPlayer(username).hand;
+	let judgeHand = table.judgeHand;
+
+	//console.log("---GameState: ",playerIsJudge,judgeMode,answerMode,playerHand,judgeHand);
+
+	io.to(socket.id).emit('timerRanOut_AutoPick',playerIsJudge,judgeMode,answerMode,playerHand,judgeHand);
+
+
+
+ }
+
+ /* --------------------- Developer Mode ------------------------- */
+
+if (skip2game) {
+	console.log("DEVMODE: Skipping to GAME MODE Directly. ")
+};
+
+function skipGame(socket) {
+	// called by socket above
+	console.log("Skip2Game pressed... producing all");
+	let keys = Object.keys(totalOnlinePlayers); // The key is the socket.id, the value is the username
+	let PlayersList = keys.map( (key) => table.addPlayer(totalOnlinePlayers[key], key) );   
+	table.connectedPlayers += PlayersList.length; 
+
+	console.log("DEVMODE: Here are the current Players", table.PlayersList);
+	table.initGame(); // initGame on the server Game object
+	initGame(socket, true, true); // initGame to the clients
+}
