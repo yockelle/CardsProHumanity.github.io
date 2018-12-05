@@ -33,6 +33,9 @@ function userRegister() {
 
 		alert("Username and/Or Password Cannot be blank!")
 	}
+
+	//return false so normal form function wont run (wont send get or post request)
+	return false;
 }; 
 function userLogin() {
 	// Emitted on 'Login' button click
