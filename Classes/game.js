@@ -222,6 +222,13 @@ module.exports = class Game {
 		}
 	}
 
+	hasAddedCards() {
+		if (this.numPlayersReady.length == this.getPlayerCount()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	addPlayer(username, socket_id) {
 		/* Adds a player to the current game by constructing a Player() object and pushing it to the end of the PlayerList

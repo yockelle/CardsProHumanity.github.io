@@ -164,7 +164,7 @@ function loginUser(socket, user_data) {
 		totalOnlinePlayers[socket.id] = user_data.username;
 		console.log("Total Players Online: " + Object.keys(totalOnlinePlayers).length);
 		if (table.isDisconnected() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
-			io.to(socket.id).emit('Disconnected_Player');
+			io.to(socket.id).emit('Disconnected_Player', table.hasAddedCards());
 			table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
 		}
 
@@ -203,8 +203,8 @@ function loginUser(socket, user_data) {
 
 				// If #connected != #player objects in game1 and player username is part of game, reconnect player
 				if (table.isDisconnected() && table.isPartofGame(totalOnlinePlayers, socket.id)) {
-					io.to(socket.id).emit('Disconnected_Player');
 					table.addDisconnectedPlayer(totalOnlinePlayers, socket.id);
+					io.to(socket.id).emit('Disconnected_Player', table.hasAddedCards());
 				}
 			}
 			// Username and and password does not match
@@ -218,7 +218,7 @@ function loginUser(socket, user_data) {
 	}); // end of mongoclient connection			
 
 	console.log('Receiving Login request. Username: ' + user_data.username + ' Password:' + user_data.password);
-	console.log('Current Online Players:', table.PlayerList);
+	console.log('Current Online Players:', Object.keys(totalOnlinePlayers).length);
 };
 
 function disconnect(socket) {
@@ -353,7 +353,6 @@ function initGame(socket, canStart, skip=false) {
 function continueGame(socket) {
 	/* Allows a player in a game to reconnect */
 	let message = "Player is continuing game.";
-
 	for (let i = 0; i < table.getPlayerCount(); i++) {
 		let player = table.PlayersList[i];
 		if (totalOnlinePlayers[socket.id] == player.username) {
