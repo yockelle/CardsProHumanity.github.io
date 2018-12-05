@@ -15,6 +15,7 @@ html, body {
 #Lobby {
     display: none;
     height: 100%;
+    overflow: auto;
 }
 
 #CustomCards {
@@ -58,7 +59,7 @@ html, body {
     position:absolute;
 }
 
-#Game h5, h1 {
+#Game h5, h1{
     font-weight: 700;
     color: red;
 }

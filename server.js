@@ -30,7 +30,6 @@ app.use(express.static("public"));
 const mongoClient = mongodb.MongoClient;
 const url = 'mongodb://teamemoji:emoji1234@ds163013.mlab.com:63013/cardsagainsthumanity';
 
-
 /* ---------- Socket.IO Code ---------- */
 io.on('connection', function newConnection(socket) {
 

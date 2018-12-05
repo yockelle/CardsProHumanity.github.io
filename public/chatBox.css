@@ -1,3 +1,7 @@
+/* #chatBox {
+    position: fixed;
+    bottom: 0;
+} */
 .chatperson{
   display: block;
   border-bottom: 1px solid #eee;
@@ -129,7 +133,7 @@ tr {
     border: 5px solid white;
     border-right-color: transparent;
     border-top-color: transparent;
-    box-shadow: 1px 1px 2px rgba(black, 0.2); // not quite perfect but close
+    box-shadow: 1px 1px 2px rgba(black, 0.2);
 }
 
 .msg_sent > time{
