@@ -68,11 +68,6 @@ function initGame() {
 	socket.emit("initGame", true);
 }
 
-function continueGame() {
-	// Emitted on 'Continue' button click
-	socket.emit("continueGame");
-}
-
 function sendCard(card_idx, option) { 
 	/* Emited upon clicking any card - either as an answer (from the candidates) or as a winner (selected by Judge).
 	 * Paramters:
@@ -148,7 +143,7 @@ var emitNewCards = function() {
 	console.log("Sending cards to server. ");
 	socket.emit("newUserCards",cardsToAdd);
 
-	let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>')		
+	let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>');
 	document.getElementById("send_cards").outerHTML = html;
 }
 
@@ -204,14 +199,6 @@ function loginStatus(data) {
 		console.log("Succesful login: " + client['username'], client['socket_id']);
 	}
 };
-
-function disconnectedPlayer(){
-	/* Creates a 'Continue' button for the disconnected player */
-	let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="continueGame()">Continue</a>');
-	document.getElementById("join_g1").innerHTML = html;
-	document.getElementById("start_g1").style.display = "none";
-}
-
 
 function onlinePlayersList(data, num_players_g1) {
 	// Updates the players currently online: HTML template looks like this:
@@ -677,12 +664,34 @@ function updateHandOrJudgeView(playersList) {
 	}
 }
 
+/* ---------------------------------- Gameflow Redirection ---------------------------------- */
+function disconnectedPlayer(allAddedCustomCards, playerAddedCustomCard){
+	/* Creates a 'Continue' button for the disconnected player */
+	let html = ('<a id="join_g1" href="#" class="btn btn-default" onclick="disconnectedPlayer()">Continue</a>');
+	document.getElementById("join_g1").innerHTML = html;
+	if (allAddedCustomCards) {
+		// Go directly to game
+		document.getElementById("Lobby").style.display = "none";
+		document.getElementById("start_g1").style.display = "none";
+		document.getElementById("CustomCards").style.display = "none";
+		socket.emit("continueGame");
+	} else {
+		// If haven't played custom cards, go to custom card page
+		document.getElementById("Lobby").style.display = "none";
+		document.getElementById("start_g1").style.display = "none";
+		document.getElementById("CustomCards").style.display = "block";
+		if (playerAddedCustomCard) {
+			let html = ('<button id="send_cards" class="button" onclick="emitNewCards()">Wait for other players</button><br>');
+			document.getElementById("send_cards").outerHTML = html;
+		}
+	}
+}
+
 function customCards(status, message) {
 	if (status) {
 		console.log(message);
  		// Go to custom card screen.
 		document.getElementById("Lobby").style.display = "none";
-		document.getElementById("LoginForm").style.display = "none";
 		document.getElementById("CustomCards").style.display = "block";
 	} else {
 		console.log('error not received.');
@@ -696,6 +705,11 @@ function reset_current_game(user) {
 	alert('Game Reset Initialized by User: ' + user);
  	// Turn on lobby div
 	document.getElementById("Lobby").style.display = "block";
+
+	// Continue reset
+	let joinhtml = ('<a id="join_g1" href="#" class="btn btn-default" onclick="joinGameOne()">Join</a>');
+	document.getElementById("join_g1").innerHTML = joinhtml;
+	document.getElementById("start_g1").style.display = "block";
 	
 	// Turn off  Game div
 	document.getElementById("Game").style.display = "none";

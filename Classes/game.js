@@ -179,6 +179,28 @@ module.exports = class Game {
 
 	}
 
+	playerAddedCustomCard(username) {
+		/*
+			Returns whether current player has added their custom cards
+		*/
+		if (this.numPlayersReady.includes(username)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	allAddedCustomCards() {
+		/*
+			Returns whether all players have added their custom cards
+		*/
+		if (this.numPlayersReady.length == this.getPlayerCount()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	hasPlayed(username){
 		/* Check whether player has played yet --> boolean
 		
@@ -221,7 +243,6 @@ module.exports = class Game {
 			}
 		}
 	}
-
 
 	addPlayer(username, socket_id) {
 		/* Adds a player to the current game by constructing a Player() object and pushing it to the end of the PlayerList
