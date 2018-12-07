@@ -486,7 +486,13 @@ function cardPlayed(socket, data, option) {
 		let new_prompt = table.promptCard.value;
 		let scores = table.scores;
 
-		io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores, winner, table.round);
+		if (table.hasWinner()) {
+			console.log("Winner has been found! ");
+			ResetGameButtonPressed(socket);
+			// VictoryScreen(table.winner); //TODO: VictoryScreen will emit a victory screen to all clients, pass in the name of the winner or popup.
+		} else { // no winner yet
+			io.emit('endJudgeRound', old_judge , new_judge, new_prompt, table.PlayersList, table.scores, winner, table.round);
+		}
 	
 	} else {
 		throw option + ' is an invalid option. Must be either "winner" or "candidate" '; 

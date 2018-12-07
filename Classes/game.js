@@ -223,6 +223,12 @@ module.exports = class Game {
 		return this.played.size === (this.getPlayerCount() - 1);
 	}
 
+	hasWinner() {
+		/* returns Boolean if there is a winner
+		*/
+		return this.winner != null;
+	}
+
 	/* ------------------------------ Player Adding / Disconnecting --------------------------------------*/
 	addDisconnectedPlayer(totalOnlinePlayers, socket_id) {
 		/* Function for reconnecting a player that has disconnected by updating
@@ -397,7 +403,7 @@ module.exports = class Game {
 		// 3)
 		console.log(`Updating the scores because ${winner_username} has won the round`);
 		if (this._updateScoresAndCheckWinner(winner_username)) {
-			this.endGame(winner);
+			this.endGame(winner_username);
 		}
 
 		// 4
@@ -454,7 +460,7 @@ module.exports = class Game {
 		}
 
 		this.scores[username]++;
-		const WINNING_SCORE = 10;
+		const WINNING_SCORE = 3;
 		console.log(`Successfully updated score for ${username} to ${this.scores[username]}`);
 
 		return this.scores[username] == WINNING_SCORE;
