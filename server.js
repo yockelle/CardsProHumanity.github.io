@@ -1,5 +1,5 @@
 var PORT = process.env.PORT || 8000;
-var dev = false;
+var dev = true;
 var skip2game = false;
 
 /* ---------- Dependencies ---------- */
@@ -29,7 +29,6 @@ app.use(express.static("public"));
 /* ---------- Mongo Code ---------- */
 const mongoClient = mongodb.MongoClient;
 const url = 'mongodb://teamemoji:emoji1234@ds163013.mlab.com:63013/cardsagainsthumanity';
-
 
 /* ---------- Socket.IO Code ---------- */
 io.on('connection', function newConnection(socket) {

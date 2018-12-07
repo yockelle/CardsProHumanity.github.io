@@ -9,12 +9,15 @@
 	<!-- Bootstrap CSS -->
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 	<link href="https://fonts.googleapis.com/css?family=Roboto:300,700" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 	<!-- CSS -->
 	<link rel="stylesheet" type="text/css" href="/public/loginPage.css">
 	<link rel="stylesheet" type="text/css" href="/public/lobbyPage.css">
 	<link rel="stylesheet" type="text/css" href="/public/mainStyle.css">
 	<link rel="stylesheet" type="text/css" href="/public/chatBox.css">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
 	<title>Cards Against Humanity</title>
 </head>
@@ -31,12 +34,15 @@
 						<h2>Login</h2>
 						<p>Please enter your username and password</p>
 					</div>
-					<form id="Login">
+					<form id="Login" onsubmit="return userRegister()">
 						<div class="form-group">
-							<input type="text" class="form-control" id="inputname" placeholder="Username">
+							<input type="text" class="form-control" id="inputname" placeholder="Username" pattern=".{6,}" title="Six or more characters"
+							 required>
 						</div>
 						<div class="form-group">
-							<input type="password" class="form-control" id="inputpass" placeholder="Password">
+							<input type="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" class="form-control" id="inputpass"
+							 placeholder="Password" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"
+							 required>
 						</div>
 						<div class="forgot">
 							<a href="#">Forgot password?</a>
@@ -45,7 +51,8 @@
 							<button type="button" class="btn btn-primary" onclick="userLogin()">Login</button>
 						</div>
 						<div id="buttons">
-							<button type="button" class="btn btn-secondary" onclick="userRegister()">Register</button>
+							<!-- Submit button now goes to onsubmit function on top-->
+							<button type="submit" class="btn btn-secondary">Register</button>
 						</div>
 					</form>
 				</div>
@@ -99,25 +106,18 @@
 				</li>
 			</ul>
 		</div>
-		</div>
-
-<!-------------------------------------- Chatbox  ------------------------------------------------------------------------------>
-
-<!-- Some bootstrap stuff -->
-<!------ Include the above in your HEAD tag -------->
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<div class="container">
-	<div class="row">
-                 <div class="col-sm-4">
-                  <div class="panel panel-primary">
-		    <div class="panel-heading top-bar">
-                    <div class="col-md-8 col-xs-8">
-                        <h3 class="panel-title"><span class="glyphicon glyphicon-book"></span> Online Players</h3>
-                    </div>
-                </div>
-		    <table id=LobbyList class="table table-striped table-hover">
-		        <!-- Fill in html here
+		<!-------------------------------------- Chatbox  ------------------------------------------------------------------------------>
+		<div id="chatBox" class="container">
+			<div class="row">
+				<div class="col-sm-4">
+					<div class="panel panel-primary">
+						<div class="panel-heading top-bar">
+							<div class="col-md-8 col-xs-8">
+								<h3 class="panel-title"><span class="glyphicon glyphicon-book"></span> Online Players</h3>
+							</div>
+						</div>
+						<table id=LobbyList class="table table-striped table-hover">
+							<!-- Fill in html here
 
 		        <tbody>
 		        	
@@ -129,23 +129,23 @@
 
 		        </tbody>
 					 -->
-		    </table>
-		</div>
-                 </div>
-                 
-                 
-                 
-                 <div class="col-sm-8">
-                  <div class="chatbody">
-                  <div class="panel panel-primary">
-                <div class="panel-heading top-bar">
-                    <div class="col-md-8 col-xs-8">
-                        <h3 class="panel-title"><span class="glyphicon glyphicon-comment"></span> Chatroom </h3>
-                    </div>
-                </div>
-                <div id="MessageBox" class="panel-body msg_container_base">
-                    
-                	<!-- Template for Sending Message 
+						</table>
+					</div>
+				</div>
+
+
+
+				<div class="col-sm-8">
+					<div class="chatbody">
+						<div class="panel panel-primary">
+							<div class="panel-heading top-bar">
+								<div class="col-md-8 col-xs-8">
+									<h3 class="panel-title"><span class="glyphicon glyphicon-comment"></span> Chatroom </h3>
+								</div>
+							</div>
+							<div id="MessageBox" class="panel-body msg_container_base">
+
+								<!-- Template for Sending Message 
                     <div class="row msg_container base_sent">
                         <div class="col-md-10 col-xs-10">
                             <div class="messages msg_sent">
@@ -163,7 +163,7 @@
                     </div>
                    -->
 
-                   <!-- Template for Receiving 
+								<!-- Template for Receiving 
 
                     <div class="row msg_container base_receive">
                         <div class="col-md-2 col-xs-2 avatar">
@@ -180,25 +180,34 @@
                     </div>
 
                 	-->
-                
-                </div>
+
+							</div>
 
 
-                <div class="panel-footer">
-                    <div class="input-group">
-                        <input id="btn-input" type="text" class="form-control input-sm chat_input" placeholder="Write your message here..." />
-                        <span class="input-group-btn">
-                        <button class="btn btn-primary btn-sm" id="btn-chat" onclick="sendChat()"><i class="fa fa-send fa-1x" aria-hidden="true"> </i></button>
-                        </span>
-                    </div>
-                </div>
-    		</div>
+							<div class="panel-footer">
+								<div class="input-group">
+									<input id="btn-input" type="text" class="form-control input-sm chat_input" placeholder="Write your message here..." />
+									<span class="input-group-btn">
+										<button class="btn btn-primary btn-sm" id="btn-chat" onclick="sendChat()"><i class="fa fa-send fa-1x"
+											 aria-hidden="true"> </i></button>
+									</span>
+								</div>
+							</div>
+						</div>
 
-                 </div>
-             </div>
-</div>
+					</div>
+				</div>
+				<!-- end of chatbox -->
 
-<!-- end of chatbox -->
+			</div>
+		</div>
+
+
+
+
+
+
+		<!-- end of chatbox -->
 	</section>
 
 	<!--Custom Card Setup-->
@@ -212,6 +221,11 @@
 		<button class="button" id="addButton" onclick="addNewCardButton()">Add New Card</button><br>
 		<div id="displayCardsEntered"></div><br>
 		<button id="send_cards" class="button" onclick="emitNewCards()">Finished</button><br>
+
+		<div id="ResetGame">
+				<button type="button" class="btn btn-danger" onclick="resetGame('CustomCardScreen')">Reset Game!</button>
+		</div>
+
 	</div>
 
 	<!-- GAME -->
