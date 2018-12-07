@@ -19,6 +19,16 @@ html, body {
 
 #CustomCards {
     display: none;
+	font-family: 'Roboto', sans-serif;
+	padding: 25px;
+}
+
+#CustomCards p {
+	font-size: 1.5em;
+}
+
+#cardInputNumber {
+	font-weight: bold;
 }
 
 #PlayerHand {
@@ -97,10 +107,21 @@ background-color: black!important;
 }
 
 #card-CSS {
+	background-image: url('CAH_CustomCard.png');
+	height: 309px;
+	width: 250px;
+	border-radius: 13px;
+	border: 1px solid black;
+	font-weight: bold;
+	font-family: helvetica;
+	padding: 20px;
+	vertical-align: text-top;
+	margin: 20px 5px 10px 0px;
+	/*
     background-image: url( 'https://i.pinimg.com/236x/a3/09/42/a30942f27ef97635607d09c882f3c9b2--cards-against-humanity-dead-inside.jpg' );
     background-size: 100px 130px;
     height: 134px;  
-    width: 104px;
+    width: 104px;*/
 }
 
 #ResetGame {

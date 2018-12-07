@@ -115,11 +115,20 @@ function cardCreator() {
 }	
 
 //Executes when user clicks Add New Card. Adds the input to cardsToAdd array and displays card to user
+//User can enter a maximum of 10 cards
 function addNewCardButton() {
-	var cardInput = document.getElementById('cardInbox').value;
-	cardsToAdd.push(cardInput);
+	if (cardNum <= 10) {
+		var cardInput = document.getElementById('cardInbox').value;
+		cardsToAdd.push(cardInput);
+		if(cardNum < 10) {
+			resetCardInputScreen();
+		} else {
+			document.getElementById('cardInputNumber').innerHTML = "You have reached the maximum cards to add";
+			document.getElementById("cardInbox").style.display = "none";
+			document.getElementById("addButton").style.display = "none";
+		}
+	}
 	displayCards();
-	resetCardInputScreen();	
 }
 
 function displayCards() {
@@ -133,7 +142,7 @@ function displayCards() {
 
 function resetCardInputScreen() {
 	//Increment card number
-	document.getElementById("cardInputNumber").innerHTML = "Card " + ++cardNum;
+	document.getElementById("cardInputNumber").innerHTML = "Card " + ++cardNum + ": ";
 	//Clear input box
 	document.getElementById("cardInbox").value = "";
 }
@@ -752,9 +761,9 @@ function reset_current_game(user) {
 
 	// Reset Custom Card Page:
 	let html = `<div id="CustomCards">` +
-	`<p>First things first, add your personalized cards. These could be the names of the players, some places in your local area, or things or people that feature in your "in" jokes. Remember, they need to be people or things (tangible or abstract) and you can add up to 20. Add your first one below followed by Add New Card and click Finished when you've entered your last.</p>` +
+	`<p>First things first, add your personalized cards. These could be the names of the players, some places in your local area, or things or people that feature in your "in" jokes. Remember, they need to be people or things (tangible or abstract) and you can add up to 10. Add your first one below followed by Add New Card and click Finished when you've entered your last.</p>` +
 	`<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>` +
-	`<button class="button" onclick="addNewCardButton()">Add New Card</button><br>` +
+	`<button class="button" id="addButton" onclick="addNewCardButton()">Add New Card</button><br>` +
 	`<div id="displayCardsEntered"></div><br>` + 
 	`<button id="send_cards" class="button" onclick="emitNewCards()">Finished</button><br>` +
 	`</div>`
