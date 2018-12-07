@@ -801,10 +801,15 @@ function updateChatbox(message, username) {
 	username (string) the sender
 	*/
 
-	let sender = `<div> <b>${username}:</b>`
-	console.log(`received chat: ${message} from ${username}`); 
-	document.getElementById('MessageBox').innerHTML += `${sender} ${message}</div`
+    let random_id = Math.random(); // Creates a random id that is very unlikely to have conflicts 
 
+	let html = `<div>
+                   <b>${username}: </b><div id="messagecontent${random_id}">  </div>
+                </div>`
+                        
+   	document.getElementById('MessageBox').innerHTML += html;
+  
+    document.getElementById(`messagecontent${random_id}`).innerText += message; // Concatenate the message 
 }
 
 /* ----------------- Dev Mode button ----------------------- */
