@@ -45,17 +45,14 @@ io.on('connection', function newConnection(socket) {
 	socket.on('initGame', (canStart) => initGame(socket, canStart));
 	socket.on('continueGame', () => continueGame(socket));
 
-
 	socket.on('cardPlayed', (data, option) => cardPlayed(socket, data, option)); // Player sends their choice cards 
 	socket.on('ResetGameButtonPressed', () => ResetGameButtonPressed(socket));
 
 	socket.on('updateChatbox', (message, sender) => updateChatbox(socket, message, sender));
 
-	// debug stuff - developer mode only
-	socket.on('pingServer', (client_sockid) => console.log(client_sockid, "has pinged us"));
-
 	socket.on('timerRanOutGetCurrentGameState', (username) => timerRanOutGetCurrentGameState(socket, username));
 	
+	// Debugging sockets below
 	socket.on('skip2game', () => skipGame(socket) );
 	if (skip2game) {
 		socket.emit('createSkipButton');
@@ -253,34 +250,8 @@ function newUserCards(socket, newPlayerCards) {
  	if (table.isTableReadyCustomCards()) {
 		
 		table.initGame();
-		
-		// Send player's hands to each socket. For loop is needed because each player sees a different hand.
-		for (let i = 0; i < table.getPlayerCount(); i++) {
-			
-			let message = "Game started!";
-			let player = table.PlayersList[i];
-			
-
-			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
-
-			console.log(`Sending hands and banner updates for user: ${player.username}, ${player.socket_id}`);
-			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
-		}
-
-		// Check if there is a prompt:
-		if (table.promptCard.value == "") {
-			console.log(`promptCard's value is empty ${table.promptCard.id}`);
-			// throw "Empty value for prompt card!"
-			console.log("Possibly check your promptCard file, it may have an empty line..");
-			table.promptCard.value == "See server's console.log(). Empty Prompt Value error";
-		}
-
-		// No for loop needed because each player sees the same Banner and the same prompt
-		console.log('Sending the Prompt card to all clients | ' + table.promptCard.value + ' |');
-		io.emit('updatePrompt', table.promptCard.value);
-
-		console.log('Sending the Banner update to all clients');
-		io.emit('updateBanner', table.PlayersList, table.scores, table.round);
+		let message = "Game started!"
+		table.PlayersList.forEach( (player) => _updateAll(socket, player, message));
 
 	} else {
 		console.log("Waiting for players!!!");
@@ -315,18 +286,8 @@ function initGame(socket, canStart, skip=false) {
 	// Skip flag is true when skip2game to allow skipping all of that
 	if (skip) {
 		// Skips the custom card thing, and straight up starts the game: - this is pulled from the newCards() function above
-		for (let i = 0; i < table.getPlayerCount(); i++) {
-			
-			let message = "Game started!";
-			let player = table.PlayersList[i];
-			
-			io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
-
-			console.log(`Sending hands and banner updates for user: ${player.username}, ${player.socket_id}`);
-			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
-			io.to(player.socket_id).emit('updatePrompt')
-			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
-		}
+		let message = "Skipping straight to game!"
+		table.PlayersList.forEach((player) => _updateAll(socket, player, message));
 		return;
 	}
 
@@ -354,20 +315,24 @@ function initGame(socket, canStart, skip=false) {
 function continueGame(socket) {
 	/* Allows a player in a game to reconnect */
 	let message = "Player is continuing game.";
-	for (let i = 0; i < table.getPlayerCount(); i++) {
-		let player = table.PlayersList[i];
-		if (totalOnlinePlayers[socket.id] == player.username) {
-			io.to(player.socket_id).emit('game_start', true, message); // io.to(player.socket_id).emit to all players in game using for loop
+	let username = totalOnlinePlayers[socket.id];
+	let player = table.getPlayer(username);
+	_updateAll(socket, player, message);
 
-			console.log("emitting to ", player.username, player.socket_id);
-			io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
-			io.to(player.socket_id).emit('updateBanner', table.PlayersList, table.scores, table.round);
-			io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
-			break;
-		}
-	}
 	console.log(table.PlayersList);
 };
+
+function _updateAll(socket, player, message) {
+	/* Updates Hand, Banner and Prompt
+	Parameters: player (reference to Player object
+	message: a string  */
+	io.to(player.socket_id).emit('game_start', true, message, table.PlayerList, table.scores); 
+
+	console.log(`Sending all updates: ${player.username}, ${player.socket_id}`);
+	io.to(player.socket_id).emit('updateHandorJudge', player.hand, player.judge);
+	io.to(player.socket_id).emit('updateBanner', table.PlayersList, table.scores, table.round);
+	io.to(player.socket_id).emit('updatePrompt', table.promptCard.value);
+}
 
 function cardPlayed(socket, data, option) {
 	/* Receives card being played by player from client.js sendCard() function 
@@ -507,12 +472,7 @@ function ResetGameButtonPressed(socket) {
 
  	let playerList = table.PlayersList;
 
- 	//For each player in the table, emit a message to tell client to reset game
-	for (let i = 0; i < playerList.length; i ++) {
-		let player = playerList[i];
-		io.to(player.socket_id).emit('reset_current_game',user);
-	}
-
+ 	table.PlayersList.forEach( (player) => io.to(player.socket_id).emit('reset_current_game',user));
  	//create a brand new table object to replace the old table
 	table = new Game();
  };
@@ -530,8 +490,6 @@ function ResetGameButtonPressed(socket) {
 	//console.log("---GameState: ",playerIsJudge,judgeMode,answerMode,playerHand,judgeHand);
 
 	io.to(socket.id).emit('timerRanOut_AutoPick',playerIsJudge,judgeMode,answerMode,playerHand,judgeHand);
-
-
 
  }
 

@@ -110,11 +110,7 @@ module.exports = class Game {
 		/*
 			Returns whether a game is open or closed
 		*/
-		if (this.gameOpen == true) {
-			return true;
-		} else {
-			return false;
-		}
+		return this.gameOpen;
 	}
 
 	isDisconnected() {
@@ -123,12 +119,9 @@ module.exports = class Game {
 			Returns
 			Boolean: whether there is a disconnection or not
 		*/
-		if (this.connectedPlayers != this.getPlayerCount()) {
-			return true;
-		} else {
-			return false;
-		}
+		return this.connectedPlayers != this.getPlayerCount();
 	}
+	
 
 	isPlayerReadyCustomCards(username) {
 		/*
@@ -183,22 +176,14 @@ module.exports = class Game {
 		/*
 			Returns whether current player has added their custom cards
 		*/
-		if (this.numPlayersReady.includes(username)) {
-			return true;
-		} else {
-			return false;
-		}
+		return this.numPlayersReady.includes(username);
 	}
 
 	allAddedCustomCards() {
 		/*
 			Returns whether all players have added their custom cards
 		*/
-		if (this.numPlayersReady.length == this.getPlayerCount()) {
-			return true;
-		} else {
-			return false;
-		}
+		return this.numPlayersReady.length == this.getPlayerCount();
 	}
 
 	hasPlayed(username){
@@ -460,7 +445,7 @@ module.exports = class Game {
 		}
 
 		this.scores[username]++;
-		const WINNING_SCORE = 3;
+		const WINNING_SCORE = 4;
 		console.log(`Successfully updated score for ${username} to ${this.scores[username]}`);
 
 		return this.scores[username] == WINNING_SCORE;
@@ -478,6 +463,7 @@ module.exports = class Game {
 	}
 
 	toString() {
+		/* Printing for debugging */
 
 		return `<game object>
 		Players List: ${this.PlayersList}

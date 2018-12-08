@@ -259,7 +259,7 @@ function onlinePlayersList(data, num_players_g1) {
 			'</div>' +
 			'<div class="media-body">');
 		k += ('<h4>'+ data[key] + '</h4>');
-		k += ('<p>SocketID: '+ key + '</p>'); // orig <p> and </p>
+		// k += ('<p>SocketID: '+ key + '</p>'); Disable socket id display
 		k += ('</div></div></li>');
 	};
 	k += '</ul>';
@@ -273,7 +273,6 @@ function onlinePlayersList(data, num_players_g1) {
 	let chatHTML = `<tbody>`;
 	for (let key in data) {
 		chatHTML += `<tr> 
-						<td>${key}</td>
 						<td>${data[key]}</td>
 					</tr>`
 	}
@@ -317,20 +316,22 @@ function game_start(canStart, message, playersList, scores) {
 
 function updateGameStyling(playerIsJudge) {
 
+	let JUDGECOLOR = "#2e2c2c"; // Dark blackish
+	let PLAYERCOLOR = "#e6e6e6"; // Light gray
 	//customize players view depending if they are judge vs reg player
 	if (playerIsJudge) {
 		document.getElementById('Status').innerHTML = `<h1>Judge</h1>`;
-		document.getElementById("Game").style.backgroundColor = "black";
-		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = "black";
-		document.body.style.backgroundColor = "black";
-		document.documentElement.style.backgroundColor = "black";
+		document.getElementById("Game").style.backgroundColor = JUDGECOLOR;
+		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = JUDGECOLOR;
+		document.body.style.backgroundColor = JUDGECOLOR;
+		document.documentElement.style.backgroundColor = JUDGECOLOR;
 
 	} else {
-		document.getElementById('Status').innerHTML = `<h1>Basic</h1>`;
-		document.getElementById("Game").style.backgroundColor = "#2e2c2c";
-		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = "#2e2c2c";
-		document.body.style.backgroundColor = "#2e2c2c";
-		document.documentElement.style.backgroundColor = "#2e2c2c";
+		document.getElementById('Status').innerHTML = `<h1>Player</h1>`;
+		document.getElementById("Game").style.backgroundColor = PLAYERCOLOR;
+		document.getElementById("Game").getElementsByClassName("container")[0].style.backgroundColor = PLAYERCOLOR;
+		document.body.style.backgroundColor = PLAYERCOLOR;
+		document.documentElement.style.backgroundColor = PLAYERCOLOR;
 	}
 
 }
@@ -767,7 +768,7 @@ function reset_current_game(user) {
 
 	// Reset Custom Card Page:
 	let html = `<div id="CustomCards">` +
-	`<p>First things first, add your personalized cards. These could be the names of the players, some places in your local area, or things or people that feature in your "in" jokes. Remember, they need to be people or things (tangible or abstract) and you can add up to 10. Add your first one below followed by Add New Card and click Finished when you've entered your last.</p>` +
+	`<p>First things first, add your personalized cards (optional) These could be the names of the players, some places in your local area, or things or people that feature in your "in" jokes. Remember, they need to be people or things (tangible or abstract) and you can add up to 10. Add your first one below followed by Add New Card and click Finished when you've entered your last. The rest of the cards will be drawn from the default deck. </p>` +
 	`<span id="cardInputNumber">Card 1: </span><input type="text" id="cardInbox"><br>` +
 	`<button class="button" id="addButton" onclick="addNewCardButton()">Add New Card</button><br>` +
 	`<div id="displayCardsEntered"></div><br>` + 
@@ -803,9 +804,7 @@ function updateChatbox(message, username) {
 
     let random_id = Math.random(); // Creates a random id that is very unlikely to have conflicts 
 
-	let html = `<div>
-                   <b>${username}: </b><div id="messagecontent${random_id}">  </div>
-                </div>`
+	let html = `<div style="float: left"><b>${username}:&nbsp</b></div> <div id="messagecontent${random_id}"> </div>`
                         
    	document.getElementById('MessageBox').innerHTML += html;
   
