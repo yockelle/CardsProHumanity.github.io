@@ -1,5 +1,8 @@
 ﻿CardsAgainstHumanity
 
+Deployment:
+
+teamemoji.herokuapp.com
 # Setup:
 
 Installing node_modules and dependencies using NPM:
