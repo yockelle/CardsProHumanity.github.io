@@ -1,6 +1,6 @@
 var PORT = process.env.PORT || 8000;
-var dev = true;
-var skip2game = true;
+var dev = false;
+var skip2game = false;
 
 /* ---------- Dependencies ---------- */
 const express = require("express");
@@ -508,7 +508,7 @@ function ResetGameButtonPressed(socket) {
  	Index is the indexed position of the card
  	Emoji is the type of emoji*/
 
- 	console.log(`received an ${emoji} from ${socket.id}`);
+ 	console.log(`received an ${emoji} from ${socket.id} of ${index}`);
 
  	table.PlayersList.forEach( (players) => io.to(players.socket_id).emit('animateEmoji', emoji, index));
  	console.log(`emitting ${emoji} to all players.`);
