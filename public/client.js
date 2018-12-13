@@ -106,6 +106,17 @@ function pingServer() {
 	socket.emit('pingServer', socket.id);
 }
 
+/* ---------------------------------- Emoji Reaction Functions ----------------------------------------- */
+
+function emojiReaction(emoji, index) {
+	/* Emoji reaction to a card has been selected, send to the server */
+	console.log('Emitting emoji reaction', emoji, index);
+	socket.emit('emojiReaction', emoji, index)
+}
+
+
+
+
 /* ------------------------------------ Card Creation Functions ------------------------------------ */
 var cardNum = 1; // Keeps track of new cards entered by user
 var cardsToAdd = []; // Array to hold new cards user enters
@@ -191,7 +202,7 @@ socket.on('game_start', game_start);
 
 // Game Page - HTML updates
 socket.on('updateBanner', updateBanner);
-socket.on('updateHandorJudge', updateHandorJudge); // calls updateHandorJudge with clickable = true
+socket.on('updateHandorJudge', updateHandorJudge);
 socket.on('updatePrompt', updatePrompt);
 
 
@@ -211,6 +222,8 @@ socket.on('timerRanOut_AutoPick', timerRanOut_AutoPick);
 // Chat Box
 socket.on('updateChatbox', updateChatbox);
 
+// Receiving Emoji Reaction - to animate
+socket.on('animateEmoji', animateEmoji);
 
 /* -------------------------------------- Socket.IO code:  Socket functions  ------------------------------------- */
 
@@ -508,7 +521,7 @@ function updateHandorJudge(new_hand, isjudge) {
 	Parameter: none
 	*/
 
-	if(isjudge) {
+	if (isjudge) {
 		document.getElementById('PlayerHand').style.display = "none";
 		document.getElementById('JudgeSelect').style.display = "block";
 		document.getElementById('JudgeSelect').innerHTML = "<h2> Players are still deciding... </h2>"
@@ -583,6 +596,7 @@ function startJudgeRound(judge_hand, judge) {
 };
 
 function judgeRoundView(judge_hand, clientIsJudge, judge) {
+	/* Function invoked when all players have answered and it is time for the Judge to view and select the winner */
 
 	//Hide their hands, display the Judge's possible selections
 	document.getElementById('PlayerHand').style.display = "none"; 
@@ -602,14 +616,17 @@ function judgeRoundView(judge_hand, clientIsJudge, judge) {
 			html += `<div class="card bg-light">
 						<div class="card-body">
 							  <h5 class="card-title"> ${judge_hand[i]['value']} </h5>
-							  <button id="cardbutton" onclick="sendCard(${args})"> This is the best one </button>
+
+							  <div class="hiddenElement" id="judgecard${i}"> This is for the emoji rxn </div>
+
+							  <button id="card${i}" onclick="sendCard(${args})"> This is the best one </button>
 						</div>
 					  </div>` 
 		}
 	
 		html += `</div></div>` // closing parent div
 
-	} else {
+	} else { // For non Judges, they have buttons to do Emoji reactions
 
 		html = '<div class="row"><div class="col text-white"><h5>Judge<span style="color:#0000FF;"> ' + judge.username + ' </span>is currently deciding:</h5></div></div>'
 		html += '<div class="row"><div class="card-deck">'  // parent div
@@ -619,6 +636,14 @@ function judgeRoundView(judge_hand, clientIsJudge, judge) {
 			html += `<div class="card bg-light">
 						<div class="card-body">
 							  <h5 class="card-title"> ${judge_hand[i]['value']} </h5>
+							  
+							  <div class="hiddenElement" id="judgecard${i}"> This is for the emoji rxn </div>
+
+							  <button style="background:white" onclick="emojiReaction('nausea',${i})"><img class="emoji" src="/public/emoji/nausea.png"> </button>
+							  <button style="background:white" onclick="emojiReaction('mad', ${i})"><img class="emoji" src="/public/emoji/mad.png"> </button>
+							  <button style="background:white" onclick="emojiReaction('smirk', ${i})"><img class="emoji" src="/public/emoji/smirk.png"> </button>
+							  <button style="background:white" onclick="emojiReaction('raised', ${i})"><img class="emoji" src="/public/emoji/raised.png"> </button>
+
 						</div>
 					  </div>` 
 		}
@@ -710,6 +735,8 @@ function updateHandOrJudgeView(playersList) {
 		}
 	}
 }
+
+
 
 /* ---------------------------------- Gameflow Redirection ---------------------------------- */
 function disconnectedPlayer(allAddedCustomCards, playerAddedCustomCard){
@@ -811,6 +838,23 @@ function updateChatbox(message, username) {
     document.getElementById(`messagecontent${random_id}`).innerText += message; // Concatenate the message 
 }
 
+function animateEmoji(emoji, index) {
+	/* Function takes in the emoji and the index (of the card) and makes a fade reaction on the card */
+
+	console.log('received a clicked update emoji from server', emoji);
+	console.log(`Judgecard index: judgecard${index}`);
+
+	// Get the judgecard that the emoji will be animated on.
+	let card = document.getElementById(`judgecard${index}`);
+
+	// Add the appropriate emoji picture onto itf
+	card.innerHTML = `<img src="/public/emoji/${emoji}.png"> </img>`
+
+	// Add the "show" class to the div
+	card.className = "animateFade";
+	// After 1.5 seocnds remove the show class from the DIV (by hiding it again)
+	setTimeout( ()=> card.className = card.className.replace("animateFade", "hiddenElement"), 1500);
+}
 /* ----------------- Dev Mode button ----------------------- */
 socket.on('createSkipButton', function () {
 	document.getElementById('join_g1').innerHTML = `<button class="button" onclick="skip2game()">SKIP2GAME</button><br>`

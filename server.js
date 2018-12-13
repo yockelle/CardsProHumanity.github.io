@@ -20,6 +20,7 @@ const maxPlayers = 5;
 var table = new Game();
 var totalOnlinePlayers = {};   // {socket.id:username}
 
+
 app.set("port", PORT); // 8000 as default
 
 /* ---------- HTML PAGE  ---------- */
@@ -49,6 +50,7 @@ io.on('connection', function newConnection(socket) {
 	socket.on('ResetGameButtonPressed', () => ResetGameButtonPressed(socket));
 
 	socket.on('updateChatbox', (message, sender) => updateChatbox(socket, message, sender));
+	socket.on('emojiReaction', (emoji, index) => animateEmoji(socket, emoji, index));
 
 	socket.on('timerRanOutGetCurrentGameState', (username) => timerRanOutGetCurrentGameState(socket, username));
 	
@@ -497,6 +499,20 @@ function ResetGameButtonPressed(socket) {
  	/* Receives message and username from client and displays into the chatbox */
  	console.log(`Received message: ${message} from user ${username}`);
  	io.emit('updateChatbox', message, username);
+ }
+
+/* */
+
+ function animateEmoji(socket, emoji, index) {
+ 	/* Receives selected emoji from client and displays ino the cards.
+ 	Index is the indexed position of the card
+ 	Emoji is the type of emoji*/
+
+ 	console.log(`received an ${emoji} from ${socket.id} of ${index}`);
+
+ 	table.PlayersList.forEach( (players) => io.to(players.socket_id).emit('animateEmoji', emoji, index));
+ 	console.log(`emitting ${emoji} to all players.`);
+
  }
 
  /* --------------------- Developer Mode ------------------------- */
