@@ -172,6 +172,15 @@ function loginUser(socket, user_data) {
 		return; // 'break' the function 
 	}
 
+	// Before connecting to database, check if the user is already logged in
+	if (Object.values(totalOnlinePlayers).includes(user_data.username)) {
+		
+		result.success = false;
+		result.message = "User is already logged in!"
+		result.username = null;
+
+		socket.emit('Login_Status', result);
+	}
 
 
 	// Connection and error handling
