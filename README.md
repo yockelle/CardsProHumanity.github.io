@@ -7,7 +7,7 @@ teamemoji.herokuapp.com
 
 Installing node_modules and dependencies using NPM:
 
-	cd CardsAgainstHumanity.github.io
+	cd CardsProHumanity.github.io
 	npm install 
 
 Run on Local Host:
