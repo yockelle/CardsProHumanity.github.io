@@ -1,4 +1,4 @@
-﻿CardsAgainstHumanity
+﻿CardsProHumanity
 
 Deployment:
 
